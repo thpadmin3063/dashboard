@@ -102,6 +102,100 @@
 
     /* Link style */
     a{ color:#b3d9ff }
+  :root{
+      --bg:#0b0f14; /* deep slate */
+      --bg-soft:#101720;
+      --panel:#131a24;
+      --panel-2:#0f1520;
+      --text:#e6eef7;
+      --muted:#93a4b5;
+      --accent:#4cc2ff;
+      --accent-2:#7c4dff;
+      --danger:#ff5d5d;
+      --ok:#3bd88f;
+      --grid-gutter:10px;
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --zoom:1; /* adjustable */
+      --cell-h:90px; /* grid cell height (scales with zoom) */
+      --header-h:72px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--text); font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+    .app{
+      display:flex; flex-direction:column; height:100%;
+    }
+
+    /* Top title bar shows live Date/Time (as "title" instead of heading) */
+    header{
+      position:sticky; top:0; z-index:9999; background:linear-gradient(180deg, rgba(19,26,36,.9), rgba(19,26,36,.6)); backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .bar{
+      display:flex; align-items:center; gap:12px; padding:12px 16px; min-height:var(--header-h);
+    }
+    .clockTitle{flex:1; font-weight:700; letter-spacing:0.2px; display:flex; align-items:baseline; gap:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .clockTitle .time{font-size:28px}
+    .clockTitle .date{font-size:15px; color:var(--muted)}
+
+    .modeBadge{font-size:12px; color:#fff; background:linear-gradient(135deg, var(--accent), var(--accent-2)); padding:6px 10px; border-radius:999px; box-shadow:var(--shadow)}
+
+    .toolbar{display:flex; align-items:center; gap:10px}
+    .toolbar button, .toolbar .select{
+      background:var(--panel); color:var(--text); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;
+      cursor:pointer; box-shadow:var(--shadow);
+    }
+    .toolbar button:hover{border-color:rgba(255,255,255,.18)}
+    .toolbar .select{display:flex; align-items:center; gap:8px}
+    .toolbar input[type="range"]{width:150px}
+
+    /* Layout */
+    .wrap{flex:1; min-height:0; overflow:auto;}
+    .dashboard-zoom{
+      transform:scale(var(--zoom)); transform-origin:0 0; width:calc(100%/var(--zoom)); padding:16px; transition:transform .15s ease;
+    }
+
+    /* Gridstack overrides */
+    .grid-stack{ --gs-gutter: var(--grid-gutter); min-height: calc(100vh - var(--header-h) - 48px);} 
+    .grid-stack-item-content{
+      background:linear-gradient(180deg, var(--panel), var(--panel-2));
+      border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); box-shadow:var(--shadow);
+      display:flex; flex-direction:column; min-height:100%; overflow:hidden;
+    }
+
+    /* Widget chrome */
+    .w-header{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.06); }
+    .w-title{ font-weight:600; flex:1 }
+    .w-actions{ display:flex; gap:6px }
+    .iconBtn{
+      background:transparent; border:1px solid rgba(255,255,255,.08); color:var(--text); border-radius:10px; padding:6px 8px; cursor:pointer;
+    }
+    .iconBtn:hover{ border-color:rgba(255,255,255,.18) }
+    .w-body{ flex:1; padding:12px; overflow:auto }
+    .cfg{ display:none; gap:12px; padding:10px 12px; border-top:1px dashed rgba(255,255,255,.08); background:rgba(255,255,255,.03) }
+    .cfg label{ font-size:12px; color:var(--muted); display:block; margin-bottom:4px }
+    .cfg input, .cfg select, .cfg textarea{
+      width:100%; background:#0d141d; color:var(--text); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:8px 10px;
+    }
+
+    /* Live mode hides edit UI */
+    .live .icon-edit, .live .icon-add, .live .icon-del, .live .cfg, .live .modeBadge, .live .toolbar .editOnly{ display:none !important }
+    .live .grid-stack{ pointer-events:auto }
+    .live .grid-stack .ui-resizable-handle, .live .grid-stack .ui-draggable-handle{ display:none }
+
+    /* Empty state */
+    .empty-hint{ opacity:.7; text-align:center; padding:30px; border:1px dashed rgba(255,255,255,.1); border-radius:12px }
+
+    /* Small helpers */
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+    .row-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px }
+    @media (max-width:900px){ .row-3{ grid-template-columns:1fr } .row{ grid-template-columns:1fr } }
+
+    /* Link style */
+    a{ color:#b3d9ff }
   </style>
 </head>
 <body>
@@ -179,6 +273,8 @@
 </template>
 
 <script>
+// Robust UUID helper for older environments
+const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => crypto.randomUUID() : () => 'id-' + (Math.random().toString(36).slice(2)) + '-' + Date.now();
 (function(){
   const app = document.getElementById('app');
   const gridEl = document.getElementById('grid');
@@ -224,13 +320,23 @@
   const prefs = JSON.parse(localStorage.getItem('dash:prefs')||'{}');
 
   function populateTimezones(){
-    const zones = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : [Intl.DateTimeFormat().resolvedOptions().timeZone];
-    tzSelect.innerHTML = zones.map(z=>`<option>${z}</option>`).join('');
+    let zones = [];
+    try{
+      if (Intl.supportedValuesOf) zones = Intl.supportedValuesOf('timeZone');
+    }catch(e){}
+    if(!zones || !zones.length){
+      zones = ['Europe/Zurich','Europe/Berlin','Europe/Paris','Europe/Vienna','UTC','America/New_York','America/Los_Angeles','Asia/Dubai','Asia/Tokyo'];
+    }
+    const cur = (Intl.DateTimeFormat().resolvedOptions().timeZone)||'Europe/Zurich';
+    tzSelect.innerHTML = zones.map(z=>`<option ${z===cur?'selected':''}>${z}</option>`).join('');
+  }</option>`).join('');
   }
   function populateLocales(){
     const guess = navigator.language || 'de-CH';
     const opts = ['de-CH','de-DE','fr-CH','it-CH','en-GB','en-US','fr-FR'];
+    if(!opts.includes(guess)) opts.unshift(guess);
     localeSelect.innerHTML = opts.map(l=>`<option ${l===guess?'selected':''}>${l}</option>`).join('');
+  }>${l}</option>`).join('');
   }
   function applyZoom(){
     document.documentElement.style.setProperty('--zoom', prefs.zoom || 1);
@@ -469,7 +575,7 @@
     const tpl = document.getElementById('tpl-widget');
     const frag = tpl.content.cloneNode(true);
     const item = frag.querySelector('.grid-stack-item');
-    item.setAttribute('gs-id', crypto.randomUUID());
+    item.setAttribute('gs-id', __uuid());
     const content = item.querySelector('.grid-stack-item-content');
     content.dataset.type = type;
     const spec = types[type];
@@ -483,7 +589,7 @@
     const tpl = document.getElementById('tpl-widget-picker');
     const frag = tpl.content.cloneNode(true);
     const item = frag.querySelector('.grid-stack-item');
-    item.setAttribute('gs-id', crypto.randomUUID());
+    item.setAttribute('gs-id', __uuid());
     grid.addWidget(item);
     const root = item.querySelector('.widget');
     root.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click', ()=>{ grid.removeWidget(item); addWidget(btn.dataset.add); }));
@@ -520,7 +626,7 @@
       grid.removeAll();
       state.nodes.forEach(n=>{
         const node = document.createElement('div');
-        node.className='grid-stack-item'; node.setAttribute('gs-x',n.x); node.setAttribute('gs-y',n.y); node.setAttribute('gs-w',n.w); node.setAttribute('gs-h',n.h); node.setAttribute('gs-id', n.id||crypto.randomUUID());
+        node.className='grid-stack-item'; node.setAttribute('gs-x',n.x); node.setAttribute('gs-y',n.y); node.setAttribute('gs-w',n.w); node.setAttribute('gs-h',n.h); node.setAttribute('gs-id', n.id||__uuid());
         const content = document.createElement('div'); content.className='grid-stack-item-content widget'; content.dataset.type = n.type;
         content.innerHTML = `<div class="w-header"><div class="w-title"></div><div class="w-actions"><button class="iconBtn icon-edit">⚙️</button><button class="iconBtn icon-del">🗑️</button></div></div><div class="w-body"></div><div class="cfg"></div>`;
         node.appendChild(content); grid.addWidget(node); mount(content);
