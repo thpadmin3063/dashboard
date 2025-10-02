@@ -281,17 +281,33 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   const emptyState = document.getElementById('emptyState');
 
   // --- Layout engine ---
-  const grid = GridStack.init({
-    float: true,
-    margin: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-gutter')),
-    cellHeight: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-h')),
-    resizable: { handles: 'all' },
-    acceptWidgets: true,
-    disableDrag: false,
-    disableResize: false,
-  });
+  let grid;
+  try {
+    if (window.GridStack) {
+      grid = GridStack.init({
+        float: true,
+        margin: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-gutter')),
+        cellHeight: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-h')),
+        resizable: { handles: 'all' },
+        acceptWidgets: true,
+        disableDrag: false,
+        disableResize: false,
+      });
+    } else { throw new Error('GridStack not loaded'); }
+  } catch(e) {
+    console.warn('GridStack unavailable, using basic fallback layout.', e);
+    grid = {
+      engine: { nodes: [] },
+      addWidget: (item)=>{ gridEl.appendChild(item); grid.engine.nodes.push({el:item, x:0, y: grid.engine.nodes.length, w: parseInt(item.getAttribute('gs-w'))||4, h: parseInt(item.getAttribute('gs-h'))||3}); },
+      removeWidget: (item)=>{ item.remove(); grid.engine.nodes = grid.engine.nodes.filter(n=>n.el!==item); },
+      on: ()=>{},
+      setStatic: ()=>{},
+      removeAll: ()=>{ gridEl.innerHTML=''; grid.engine.nodes = []; },
+      get: ()=>grid
+    };
+  }
 
-  function updateEmpty(){ emptyState.style.display = grid.engine.nodes.length ? 'none' : 'block'; }
+  function updateEmpty(){ const has = (grid && grid.engine && grid.engine.nodes && grid.engine.nodes.length) || gridEl.children.length; emptyState.style.display = has ? 'none' : 'block'; }
   grid.on('added removed change', updateEmpty);
 
   // --- Mode handling ---
