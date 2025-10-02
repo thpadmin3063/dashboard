@@ -6,102 +6,469 @@
   <title>Dashboard</title>
   <!-- Gridstack (drag & resize layout) -->
   <link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-h5.js"></script>
+  <style>
+    :root{
+      --bg:#0b0f14; /* deep slate */
+      --bg-soft:#101720;
+      --panel:#131a24;
+      --panel-2:#0f1520;
+      --text:#e6eef7;
+      --muted:#93a4b5;
+      --accent:#4cc2ff;
+      --accent-2:#7c4dff;
+      --danger:#ff5d5d;
+      --ok:#3bd88f;
+      --grid-gutter:10px;
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --zoom:1; /* adjustable */
+      --cell-h:90px; /* grid cell height (scales with zoom) */
+      --header-h:72px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--text); font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+    .app{
+      display:flex; flex-direction:column; height:100%;
+    }
+
+    /* Top title bar shows live Date/Time (as "title" instead of heading) */
+    header{
+      position:sticky; top:0; z-index:50; background:linear-gradient(180deg, rgba(19,26,36,.9), rgba(19,26,36,.6)); backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .bar{
+      display:flex; align-items:center; gap:12px; padding:12px 16px; min-height:var(--header-h);
+    }
+    .clockTitle{flex:1; font-weight:700; letter-spacing:0.2px; display:flex; align-items:baseline; gap:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .clockTitle .time{font-size:28px}
+    .clockTitle .date{font-size:15px; color:var(--muted)}
+
+    .modeBadge{font-size:12px; color:#fff; background:linear-gradient(135deg, var(--accent), var(--accent-2)); padding:6px 10px; border-radius:999px; box-shadow:var(--shadow)}
+
+    .toolbar{display:flex; align-items:center; gap:10px}
+    .toolbar button, .toolbar .select{
+      background:var(--panel); color:var(--text); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;
+      cursor:pointer; box-shadow:var(--shadow);
+    }
+    .toolbar button:hover{border-color:rgba(255,255,255,.18)}
+    .toolbar .select{display:flex; align-items:center; gap:8px}
+    .toolbar input[type="range"]{width:150px}
+
+    /* Layout */
+    .wrap{flex:1; min-height:0; overflow:auto;}
+    .dashboard-zoom{
+      transform:scale(var(--zoom)); transform-origin:0 0; width:calc(100%/var(--zoom)); padding:16px; transition:transform .15s ease;
+    }
+
+    /* Gridstack overrides */
+    .grid-stack{ --gs-gutter: var(--grid-gutter); }
+    .grid-stack-item-content{
+      background:linear-gradient(180deg, var(--panel), var(--panel-2));
+      border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); box-shadow:var(--shadow);
+      display:flex; flex-direction:column; min-height:100%; overflow:hidden;
+    }
+
+    /* Widget chrome */
+    .w-header{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.06); }
+    .w-title{ font-weight:600; flex:1 }
+    .w-actions{ display:flex; gap:6px }
+    .iconBtn{
+      background:transparent; border:1px solid rgba(255,255,255,.08); color:var(--text); border-radius:10px; padding:6px 8px; cursor:pointer;
+    }
+    .iconBtn:hover{ border-color:rgba(255,255,255,.18) }
+    .w-body{ flex:1; padding:12px; overflow:auto }
+    .cfg{ display:none; gap:12px; padding:10px 12px; border-top:1px dashed rgba(255,255,255,.08); background:rgba(255,255,255,.03) }
+    .cfg label{ font-size:12px; color:var(--muted); display:block; margin-bottom:4px }
+    .cfg input, .cfg select, .cfg textarea{
+      width:100%; background:#0d141d; color:var(--text); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:8px 10px;
+    }
+
+    /* Live mode hides edit UI */
+    .live .icon-edit, .live .icon-add, .live .icon-del, .live .cfg, .live .modeBadge, .live .toolbar .editOnly{ display:none !important }
+    .live .grid-stack{ pointer-events:auto }
+    .live .grid-stack .ui-resizable-handle, .live .grid-stack .ui-draggable-handle{ display:none }
+
+    /* Empty state */
+    .empty-hint{ opacity:.7; text-align:center; padding:30px; border:1px dashed rgba(255,255,255,.1); border-radius:12px }
+
+    /* Small helpers */
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+    .row-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px }
+    @media (max-width:900px){ .row-3{ grid-template-columns:1fr } .row{ grid-template-columns:1fr } }
+
+    /* Link style */
+    a{ color:#b3d9ff }
+  :root{
+      --bg:#0b0f14; /* deep slate */
+      --bg-soft:#101720;
+      --panel:#131a24;
+      --panel-2:#0f1520;
+      --text:#e6eef7;
+      --muted:#93a4b5;
+      --accent:#4cc2ff;
+      --accent-2:#7c4dff;
+      --danger:#ff5d5d;
+      --ok:#3bd88f;
+      --grid-gutter:10px;
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --zoom:1; /* adjustable */
+      --cell-h:90px; /* grid cell height (scales with zoom) */
+      --header-h:72px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--text); font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+    .app{
+      display:flex; flex-direction:column; height:100%;
+    }
+
+    /* Top title bar shows live Date/Time (as "title" instead of heading) */
+    header{
+      position:sticky; top:0; z-index:9999; background:linear-gradient(180deg, rgba(19,26,36,.9), rgba(19,26,36,.6)); backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .bar{
+      display:flex; align-items:center; gap:12px; padding:12px 16px; min-height:var(--header-h);
+    }
+    .clockTitle{flex:1; font-weight:700; letter-spacing:0.2px; display:flex; align-items:baseline; gap:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .clockTitle .time{font-size:28px}
+    .clockTitle .date{font-size:15px; color:var(--muted)}
+
+    .modeBadge{font-size:12px; color:#fff; background:linear-gradient(135deg, var(--accent), var(--accent-2)); padding:6px 10px; border-radius:999px; box-shadow:var(--shadow)}
+
+    .toolbar{display:flex; align-items:center; gap:10px}
+    .toolbar button, .toolbar .select{
+      background:var(--panel); color:var(--text); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;
+      cursor:pointer; box-shadow:var(--shadow);
+    }
+    .toolbar button:hover{border-color:rgba(255,255,255,.18)}
+    .toolbar .select{display:flex; align-items:center; gap:8px}
+    .toolbar input[type="range"]{width:150px}
+
+    /* Layout */
+    .wrap{flex:1; min-height:0; overflow:auto;}
+    .dashboard-zoom{
+      transform:scale(var(--zoom)); transform-origin:0 0; width:calc(100%/var(--zoom)); padding:16px; transition:transform .15s ease;
+    }
+
+    /* Gridstack overrides */
+    .grid-stack{ --gs-gutter: var(--grid-gutter); min-height: calc(100vh - var(--header-h) - 48px);} 
+    .grid-stack-item-content{
+      background:linear-gradient(180deg, var(--panel), var(--panel-2));
+      border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); box-shadow:var(--shadow);
+      display:flex; flex-direction:column; min-height:100%; overflow:hidden;
+    }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      :root{
-        --bg:#0b0f14; /* deep slate */
-        --bg-soft:#101720;
-        --panel:#131a24;
-        --panel-2:#0f1520;
-        --text:#e6eef7;
-        --muted:#93a4b5;
-        --accent:#4cc2ff;
-        --accent-2:#7c4dff;
-        --danger:#ff5d5d;
-        --ok:#3bd88f;
-        --grid-gutter:10px;
-        --radius:16px;
-        --shadow:0 10px 30px rgba(0,0,0,.35);
-        --zoom:1; /* adjustable */
-        --cell-h:90px; /* grid cell height (scales with zoom) */
-        --header-h:72px;
+      :root {
+        --bg:#05070b;
+        --bg-soft:#0d141d;
+        --panel:rgba(16,24,36,0.9);
+        --panel-2:rgba(9,15,26,0.85);
+        --text:#eef5ff;
+        --muted:#8b9bb3;
+        --accent:#5f8bff;
+        --accent-2:#7a5bff;
+        --danger:#ff6976;
+        --ok:#3ad6a4;
+        --grid-gutter:12px;
+        --radius:18px;
+        --shadow:0 24px 60px rgba(3,7,18,0.55);
+        --glow:0 0 40px rgba(95,139,255,0.35);
+        --zoom:1;
+        --cell-h:90px;
+        --header-h:86px;
+        --cols:12;
       }
-      *{box-sizing:border-box}
-      html,body{height:100%}
-      body{
-        margin:0; background:var(--bg); color:var(--text); font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.5 "Inter", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        overflow:hidden;
       }
-      .app{
-        display:flex; flex-direction:column; height:100%;
+      body::before {
+        content:"";
+        position:fixed; inset:-30vh -30vw auto auto;
+        width:70vw; height:70vh;
+        background:radial-gradient(circle at 30% 30%, rgba(100,145,255,0.35), transparent 60%),
+                   radial-gradient(circle at 70% 10%, rgba(120,70,255,0.3), transparent 65%),
+                   linear-gradient(135deg, rgba(35,54,95,0.35), rgba(12,24,48,0.05));
+        z-index:0;
+        pointer-events:none;
+      }
+      body::after {
+        content:"";
+        position:fixed; inset:auto auto -25vh -20vw;
+        width:55vw; height:55vh;
+        background:radial-gradient(circle at 40% 30%, rgba(61,92,255,0.25), transparent 70%),
+                   radial-gradient(circle at 75% 70%, rgba(74,219,148,0.18), transparent 70%);
+        z-index:0;
+        pointer-events:none;
+      }
+      .app {
+        display:flex;
+        flex-direction:column;
+        height:100%;
+        position:relative;
+        z-index:1;
       }
 
+    /* Widget chrome */
+    .w-header{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.06); }
+    .w-title{ font-weight:600; flex:1 }
+    .w-actions{ display:flex; gap:6px }
+    .iconBtn{
+      background:transparent; border:1px solid rgba(255,255,255,.08); color:var(--text); border-radius:10px; padding:6px 8px; cursor:pointer;
+    }
+    .iconBtn:hover{ border-color:rgba(255,255,255,.18) }
+    .w-body{ flex:1; padding:12px; overflow:auto }
+    .cfg{ display:none; gap:12px; padding:10px 12px; border-top:1px dashed rgba(255,255,255,.08); background:rgba(255,255,255,.03) }
+    .cfg label{ font-size:12px; color:var(--muted); display:block; margin-bottom:4px }
+    .cfg input, .cfg select, .cfg textarea{
+      width:100%; background:#0d141d; color:var(--text); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:8px 10px;
+    }
       /* Top title bar shows live Date/Time (as "title" instead of heading) */
-      header{
-        position:sticky; top:0; z-index:9999; background:linear-gradient(180deg, rgba(19,26,36,.9), rgba(19,26,36,.6)); backdrop-filter: blur(10px);
+      header {
+        position:sticky;
+        top:0;
+        z-index:9999;
+        background:linear-gradient(180deg, rgba(11,16,26,0.85), rgba(6,10,18,0.75));
+        backdrop-filter: blur(18px);
         border-bottom:1px solid rgba(255,255,255,.06);
+        box-shadow: var(--shadow);
       }
-      .bar{
-        display:flex; align-items:center; gap:12px; padding:12px 16px; min-height:var(--header-h);
+      .bar {
+        display:flex;
+        align-items:center;
+        gap:20px;
+        padding:18px 26px;
+        min-height:var(--header-h);
+        flex-wrap:wrap;
       }
-      .clockTitle{flex:1; font-weight:700; letter-spacing:0.2px; display:flex; align-items:baseline; gap:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-      .clockTitle .time{font-size:28px}
-      .clockTitle .date{font-size:15px; color:var(--muted)}
+      .clockTitle {
+        flex:1;
+        font-weight:600;
+        letter-spacing:0.2px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:18px;
+        white-space:nowrap;
+        overflow:hidden;
+      }
+      .clockTitle .time { font-size:clamp(28px, 4vw, 42px); font-weight:700; letter-spacing:0.6px; }
+      .clockTitle .date { font-size:16px; color:var(--muted); text-transform:capitalize; overflow:hidden; text-overflow:ellipsis; }
 
-      .modeBadge{font-size:12px; color:#fff; background:linear-gradient(135deg, var(--accent), var(--accent-2)); padding:6px 10px; border-radius:999px; box-shadow:var(--shadow)}
-
-      .toolbar{display:flex; align-items:center; gap:10px}
-      .toolbar button, .toolbar .select{
-        background:var(--panel); color:var(--text); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;
-        cursor:pointer; box-shadow:var(--shadow);
+      .modeBadge {
+        font-size:13px;
+        color:#fff;
+        background:linear-gradient(135deg, rgba(95,139,255,1), rgba(122,91,255,1));
+        padding:8px 16px;
+        border-radius:999px;
+        box-shadow:var(--glow);
+        letter-spacing:0.6px;
       }
-      .toolbar button:hover{border-color:rgba(255,255,255,.18)}
-      .toolbar .select{display:flex; align-items:center; gap:8px}
-      .toolbar input[type="range"]{width:150px}
+
+    /* Live mode hides edit UI */
+    .live .icon-edit, .live .icon-add, .live .icon-del, .live .cfg, .live .modeBadge, .live .toolbar .editOnly{ display:none !important }
+    .live .grid-stack{ pointer-events:auto }
+    .live .grid-stack .ui-resizable-handle, .live .grid-stack .ui-draggable-handle{ display:none }
+      .toolbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+      .toolbar button,
+      .toolbar .select {
+        background:linear-gradient(160deg, rgba(18,26,40,0.95), rgba(12,19,32,0.85));
+        color:var(--text);
+        border:1px solid rgba(132,158,255,0.12);
+        border-radius:14px;
+        padding:12px 14px;
+        cursor:pointer;
+        box-shadow:0 12px 30px rgba(2,7,16,0.45);
+        transition:border-color .2s ease, transform .2s ease;
+      }
+      .toolbar button:hover,
+      .toolbar .select:hover {
+        border-color:rgba(132,158,255,0.4);
+        transform:translateY(-1px);
+      }
+      .toolbar .select { display:flex; flex-direction:column; gap:6px; min-width:170px; }
+      .toolbar label { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; }
+      .toolbar select,
+      .toolbar input[type="range"],
+      .toolbar input[type="number"] {
+        width:100%;
+        background:rgba(8,13,23,0.9);
+        color:var(--text);
+        border:1px solid rgba(132,158,255,0.18);
+        border-radius:10px;
+        padding:8px 10px;
+      }
+      .toolbar input[type="range"] { width:160px; }
 
       /* Layout */
-      .wrap{flex:1; min-height:0; overflow:auto;}
-      .dashboard-zoom{
-        transform:scale(var(--zoom)); transform-origin:0 0; width:calc(100%/var(--zoom)); padding:16px; transition:transform .15s ease;
+      .wrap { flex:1; min-height:0; overflow:auto; position:relative; }
+      .dashboard-zoom {
+        transform:scale(var(--zoom));
+        transform-origin:0 0;
+        width:calc(100%/var(--zoom));
+        padding:28px 32px 96px;
+        transition:transform .18s ease;
       }
 
+    /* Empty state */
+    .empty-hint{ opacity:.7; text-align:center; padding:30px; border:1px dashed rgba(255,255,255,.1); border-radius:12px }
       /* Gridstack overrides */
-      .grid-stack{ --gs-gutter: var(--grid-gutter); min-height: calc(100vh - var(--header-h) - 48px); }
+      .grid-stack{ --gs-gutter: var(--grid-gutter); min-height: calc(100vh - var(--header-h) - 72px); }
       .grid-stack-item-content{
-        background:linear-gradient(180deg, var(--panel), var(--panel-2));
-        border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); box-shadow:var(--shadow);
-        display:flex; flex-direction:column; min-height:100%; overflow:hidden;
+        background:linear-gradient(160deg, rgba(20,28,42,0.95), rgba(9,14,24,0.92));
+        border:1px solid rgba(132,158,255,0.12); border-radius:var(--radius); box-shadow:var(--shadow);
+        display:flex; flex-direction:column; min-height:100%; overflow:hidden; position:relative;
+      }
+      .grid-stack-item-content::after {
+        content:"";
+        position:absolute; inset:0;
+        pointer-events:none;
+        background:radial-gradient(ellipse at top right, rgba(95,139,255,0.15), transparent 55%);
+        opacity:0.6;
+        mix-blend-mode:screen;
+      }
+      .grid-stack-item-content.glow {
+        outline:2px solid rgba(95,139,255,0.35);
+        box-shadow:var(--glow);
       }
 
+    /* Small helpers */
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+    .row-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px }
+    @media (max-width:900px){ .row-3{ grid-template-columns:1fr } .row{ grid-template-columns:1fr } }
       /* Widget chrome */
-      .w-header{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.06); }
-      .w-title{ font-weight:600; flex:1 }
-      .w-actions{ display:flex; gap:6px }
+      .w-header{ display:flex; align-items:center; gap:12px; padding:16px 18px; border-bottom:1px solid rgba(132,158,255,0.12); }
+      .w-title{ font-weight:600; flex:1; letter-spacing:0.3px; }
+      .w-actions{ display:flex; gap:8px }
       .iconBtn{
-        background:transparent; border:1px solid rgba(255,255,255,.08); color:var(--text); border-radius:10px; padding:6px 8px; cursor:pointer;
+        background:rgba(10,15,24,0.75); border:1px solid rgba(132,158,255,0.2); color:var(--text); border-radius:12px; padding:8px 10px;cursor:pointer;
+        transition: transform .18s ease, border-color .18s ease;
       }
-      .iconBtn:hover{ border-color:rgba(255,255,255,.18) }
-      .w-body{ flex:1; padding:12px; overflow:auto }
-      .cfg{ display:none; gap:12px; padding:10px 12px; border-top:1px dashed rgba(255,255,255,.08); background:rgba(255,255,255,.03) }
+      .iconBtn:hover{ border-color:rgba(132,158,255,0.45); transform:translateY(-1px); }
+      .w-body{ flex:1; padding:18px; overflow:auto; display:flex; flex-direction:column; gap:14px; }
+      .w-body::-webkit-scrollbar { width:8px; }
+      .w-body::-webkit-scrollbar-thumb { background:rgba(132,158,255,0.2); border-radius:4px; }
+      .cfg{ display:none; gap:16px; padding:18px; border-top:1px dashed rgba(132,158,255,0.15); background:rgba(8,13,23,0.65); border-radius:0 0 var(--radius) var(--radius) }
       .cfg label{ font-size:12px; color:var(--muted); display:block; margin-bottom:4px }
       .cfg input, .cfg select, .cfg textarea{
         width:100%; background:#0d141d; color:var(--text); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:8px 10px;
       }
 
+    /* Link style */
+    a{ color:#b3d9ff }
+  </style>
       /* Live mode hides edit UI */
-      .live .icon-edit, .live .icon-add, .live .icon-del, .live .cfg, .live .modeBadge, .live .toolbar .editOnly{ display:none !important }
+      .live .icon-edit, .live .icon-add, .live .icon-del, .live .cfg, .live .modeBadge, .live .toolbar .editOnly, .live .floating-controls, .live .grid-hint{ display:none !important }
       .live .grid-stack{ pointer-events:auto }
       .live .grid-stack .ui-resizable-handle, .live .grid-stack .ui-draggable-handle{ display:none }
 
       /* Empty state */
-      .empty-hint{ opacity:.7; text-align:center; padding:30px; border:1px dashed rgba(255,255,255,.1); border-radius:12px }
+      .empty-hint{ opacity:.7; text-align:center; padding:32px; border:1px dashed rgba(132,158,255,0.18); border-radius:16px; background:rgba(8,13,23,0.35); box-shadow: inset 0 0 0 1px rgba(132,158,255,0.05); margin-top:18px }
 
       /* Small helpers */
-      .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
-      .row-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px }
-      @media (max-width:900px){ .row-3{ grid-template-columns:1fr } .row{ grid-template-columns:1fr } }
+      .row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px }
+      .row-3{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px }
+      @media (max-width:900px){ .row-3{ grid-template-columns:1fr } .row{ grid-template-columns:1fr } .bar{ flex-direction:column; align-items:flex-start; gap:16px } }
+
+      /* Dashboard visuals */
+      .clock-card{display:flex;flex-direction:column;gap:8px;padding:12px 4px;}
+      .clock-time{font-size:48px;font-weight:700;letter-spacing:1.1px;}
+      .clock-date{font-size:15px;color:var(--muted);text-transform:capitalize;}
+      .weather-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:16px;border:1px solid rgba(132,158,255,0.12);background:rgba(255,255,255,0.02);}
+      .weather-temp{font-size:46px;font-weight:700;}
+      .weather-meta{display:flex;flex-direction:column;gap:6px;}
+      .weather-meta .weather-city{font-weight:600;letter-spacing:0.4px;}
+      .weather-meta .weather-desc{text-transform:capitalize;color:var(--muted);font-size:14px;}
+      .weather-aux{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:16px;}
+      .weather-aux div{background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(132,158,255,0.12);padding:10px 12px;font-size:13px;color:var(--muted);letter-spacing:0.3px;}
+      .weather-aux div strong{display:block;color:var(--text);font-size:17px;margin-bottom:4px;}
+      .stat-list{display:flex;flex-direction:column;gap:10px;}
+      .stat-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;border-radius:14px;border:1px solid rgba(132,158,255,0.12);background:rgba(255,255,255,0.02);}
+      .stat-name{text-transform:uppercase;font-size:12px;color:var(--muted);letter-spacing:1px;}
+      .stat-value{font-weight:600;font-size:16px;}
+      .stat-change{font-weight:600;font-size:14px;}
+      .stat-change.up{color:var(--ok);}
+      .stat-change.down{color:var(--danger);}
+      .agenda-list{display:flex;flex-direction:column;gap:12px;}
+      .agenda-event{padding:14px 16px;border-radius:14px;border:1px solid rgba(132,158,255,0.12);background:rgba(255,255,255,0.02);box-shadow:0 10px 30px rgba(4,9,18,0.3);}
+      .agenda-summary{font-weight:600;letter-spacing:0.3px;}
+      .agenda-when{font-size:13px;color:var(--muted);margin-top:6px;}
 
       /* Link style */
       a{ color:#b3d9ff }
+
+      /* Floating edit controls */
+      .floating-controls {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        z-index: 9998;
+      }
+      .floating-controls button {
+        background: linear-gradient(140deg, rgba(95,139,255,1), rgba(122,91,255,0.85));
+        color: var(--text);
+        border: none;
+        border-radius: 18px;
+        padding: 14px 18px;
+        font-weight:600;
+        letter-spacing:0.4px;
+        cursor: pointer;
+        box-shadow: var(--glow);
+        display:flex;
+        align-items:center;
+        gap:10px;
+        transition: transform .2s ease;
+      }
+      .floating-controls button span {
+        font-size:14px;
+        text-transform:uppercase;
+        letter-spacing:1.5px;
+      }
+      .floating-controls button strong{font-size:22px;line-height:1;}
+      .floating-controls button:hover { transform: translateY(-2px); }
+      .floating-controls button.secondary {
+        background: linear-gradient(160deg, rgba(18,26,40,0.95), rgba(12,19,32,0.85));
+        border:1px solid rgba(132,158,255,0.25);
+        box-shadow:0 16px 40px rgba(2,7,16,0.55);
+      }
+      .grid-hint {
+        position: fixed;
+        left: 32px;
+        bottom: 32px;
+        background: rgba(8,13,23,0.78);
+        border: 1px solid rgba(132,158,255,0.18);
+        border-radius: 16px;
+        padding: 18px 20px;
+        font-size: 13px;
+        color: var(--muted);
+        letter-spacing:0.3px;
+        box-shadow: var(--shadow);
+        max-width: 260px;
+      }
+      @media (max-width: 720px) {
+        .floating-controls { right: 18px; bottom: 18px; }
+        .grid-hint { left: 18px; bottom: 18px; }
+      }
     </style>
 </head>
 <body>
@@ -115,21 +482,31 @@
       <span class="modeBadge" id="modeBadge">Bearbeitungsmodus</span>
       <div class="toolbar">
         <button id="toggleMode">Live-Modus</button>
+        <button id="toggleMode" title="Zwischen Bearbeiten und Live wechseln">Live-Modus</button>
         <div class="select editOnly">
           <label for="tzSelect" style="font-size:12px;color:var(--muted)">Zeitzone</label>
+          <label for="tzSelect">Zeitzone</label>
           <select id="tzSelect"></select>
         </div>
         <div class="select editOnly">
           <label for="localeSelect" style="font-size:12px;color:var(--muted)">Region/Format</label>
+          <label for="localeSelect">Region / Format</label>
           <select id="localeSelect"></select>
         </div>
         <div class="select editOnly" title="Skalierung der gesamten Ansicht">
           <label for="zoomRange" style="font-size:12px;color:var(--muted)">Skalierung</label>
+          <label for="zoomRange">Skalierung</label>
           <input type="range" min="0.6" max="1.6" step="0.02" id="zoomRange" />
         </div>
         <button class="editOnly" id="addWidget">+ Widget</button>
         <button class="editOnly" id="saveLayout">Speichern</button>
         <button class="editOnly" id="resetLayout" style="color:#fff;background:linear-gradient(135deg, var(--danger), #ff9a9a)">Zurücksetzen</button>
+        <div class="select editOnly" title="Anzahl Spalten des Grids">
+          <label for="columnRange">Spalten</label>
+          <input type="range" min="6" max="14" step="1" id="columnRange" />
+        </div>
+        <button class="editOnly" id="saveLayout" title="Layout speichern">Layout sichern</button>
+        <button class="editOnly" id="resetLayout" style="color:#fff;background:linear-gradient(135deg, var(--danger), #ff9a9a)" title="Alles zurücksetzen">Zurücksetzen</button>
       </div>
     </div>
   </header>
@@ -140,6 +517,12 @@
       <div id="emptyState" class="empty-hint" style="display:none">Keine Widgets. Klicke im Bearbeitungsmodus auf <em>+ Widget</em>.</div>
     </div>
   </div>
+
+  <div class="floating-controls editOnly">
+    <button id="addWidget" aria-label="Widget hinzufügen"><strong>+</strong><span>Widget</span></button>
+    <button id="autoLayout" class="secondary" aria-label="Automatisch anordnen"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11.5L7.2 7.2L10.2 10.2L14.5 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Auto Layout</span></button>
+  </div>
+  <div class="grid-hint editOnly">Tipp: Ziehe die Karten frei, nutze den Auto‑Layout Button für einen schnellen Raster‑Reset und speichere anschliessend deine Ansicht.</div>
 </div>
 
 <!-- Templates -->
@@ -165,19 +548,7 @@
       <div class="w-header"><div class="w-title">Widget hinzufügen</div><div class="w-actions"><button class="iconBtn icon-del">🗑️</button></div></div>
       <div class="w-body">
         <div class="row-3">
-          <button class="iconBtn" data-add="clock">🕒 Uhr & Datum</button>
-          <button class="iconBtn" data-add="weather">⛅ Wetter</button>
-          <button class="iconBtn" data-add="gcal">📅 Google Kalender</button>
-          <button class="iconBtn" data-add="crypto">₿ Krypto Kurse</button>
-          <button class="iconBtn" data-add="stocks">📈 Aktienkurse</button>
-          <button class="iconBtn" data-add="custom">🧩 Custom Webpart</button>
-        </div>
-        <p style="color:var(--muted);margin-top:12px">Tipp: Im Live‑Modus sind Konfigurationselemente ausgeblendet und Drag/Resize deaktiviert.</p>
-      </div>
-    </div>
-  </div>
-</template>
-
+@@ -275,414 +371,611 @@
 <script>
 // Global error catcher to avoid silent failures and show a helpful message
 window.addEventListener('error', (e)=>{
@@ -211,6 +582,7 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
     if (window.GridStack) {
       grid = GridStack.init({
         float: true,
+        column: initialCols,
         margin: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-gutter')),
         cellHeight: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-h')),
         resizable: { handles: 'all' },
@@ -223,6 +595,8 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
     console.warn('GridStack unavailable, using basic fallback layout.', e);
     grid = {
       engine: { nodes: [] },
+      engine: { nodes: [], column: initialCols },
+      column: (cols)=>{ grid.engine.column = cols; },
       addWidget: (item)=>{ gridEl.appendChild(item); grid.engine.nodes.push({el:item, x:0, y: grid.engine.nodes.length, w: parseInt(item.getAttribute('gs-w'))||4, h: parseInt(item.getAttribute('gs-h'))||3}); },
       removeWidget: (item)=>{ item.remove(); grid.engine.nodes = grid.engine.nodes.filter(n=>n.el!==item); },
       on: ()=>{},
@@ -233,7 +607,22 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   }
 
   function updateEmpty(){ const has = (grid && grid.engine && grid.engine.nodes && grid.engine.nodes.length) || gridEl.children.length; emptyState.style.display = has ? 'none' : 'block'; }
+  function updateEmpty(){
+    const has = (grid && grid.engine && grid.engine.nodes && grid.engine.nodes.length) || gridEl.children.length;
+    emptyState.style.display = has ? 'none' : 'block';
+    if(gridHint){
+      gridHint.innerHTML = has ? defaultGridHint : emptyGridHint;
+      gridHint.style.opacity = has ? '1' : '0.85';
+    }
+  }
   grid.on('added removed change', updateEmpty);
+  if(grid?.on){
+    const stopHandler = (_event, el)=>{ toggleGlowFromNode(el, false); if(!live) snapshotLayout(); };
+    grid.on('dragstart', (_event, el)=>toggleGlowFromNode(el, true));
+    grid.on('resizestart', (_event, el)=>toggleGlowFromNode(el, true));
+    grid.on('dragstop', stopHandler);
+    grid.on('resizestop', stopHandler);
+  }
 
   // --- Mode handling ---
   const toggleBtn = document.getElementById('toggleMode');
@@ -241,6 +630,7 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   let live = false;
   function applyMode(){
     app.classList.toggle('live', live);
+    if(gridHint){ gridHint.style.display = live ? 'none' : ''; }
     if(live){
       toggleBtn.textContent = 'Bearbeiten';
       modeBadge.style.display = 'none';
@@ -250,6 +640,7 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
       modeBadge.style.display = '';
       modeBadge.textContent = 'Bearbeitungsmodus';
       grid.setStatic(false);
+      pingGlow();
     }
   }
   toggleBtn.addEventListener('click', ()=>{ live = !live; savePrefs(); applyMode(); });
@@ -258,7 +649,14 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   const tzSelect = document.getElementById('tzSelect');
   const localeSelect = document.getElementById('localeSelect');
   const zoomRange = document.getElementById('zoomRange');
+  const columnRange = document.getElementById('columnRange');
+  const autoLayoutBtn = document.getElementById('autoLayout');
+  const gridHint = document.querySelector('.grid-hint');
+  const defaultGridHint = gridHint ? gridHint.innerHTML : '';
+  const emptyGridHint = "Noch keine Widgets. Tippe auf <strong>+ Widget</strong> für deinen Start.";
   const prefs = JSON.parse(localStorage.getItem('dash:prefs')||'{}');
+  const initialCols = Math.min(14, Math.max(6, parseInt(prefs.cols || 12, 10) || 12));
+  let live = !!prefs.live;
 
   function normalizeLocale(loc){
     if(!loc) return null;
@@ -279,12 +677,20 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
     if(!zones || !zones.length){
       zones = ['Europe/Zurich','Europe/Berlin','Europe/Paris','Europe/Vienna','UTC','America/New_York','America/Los_Angeles','Asia/Dubai','Asia/Tokyo'];
     }
+    const cur = (Intl.DateTimeFormat().resolvedOptions().timeZone)||'Europe/Zurich';
+    tzSelect.innerHTML = zones.map(z=>`<option ${z===cur?'selected':''}>${z}</option>`).join('');
+  }</option>`).join('');
     const selected = normalizeTimeZone(prefs.tz) || normalizeTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone) || 'Europe/Zurich';
     tzSelect.innerHTML = zones.map(z=>`<option value="${z}" ${z===selected?'selected':''}>${z}</option>`).join('');
     tzSelect.value = selected;
     if(!tzSelect.value){ tzSelect.value = 'Europe/Zurich'; }
   }
   function populateLocales(){
+    const guess = navigator.language || 'de-CH';
+    const opts = ['de-CH','de-DE','fr-CH','it-CH','en-GB','en-US','fr-FR'];
+    if(!opts.includes(guess)) opts.unshift(guess);
+    localeSelect.innerHTML = opts.map(l=>`<option ${l===guess?'selected':''}>${l}</option>`).join('');
+  }>${l}</option>`).join('');
     const guess = normalizeLocale(prefs.locale || navigator.language || 'de-CH') || 'de-CH';
     const base = ['de-CH','de-DE','fr-CH','it-CH','en-GB','en-US','fr-FR'];
     const opts = [];
@@ -294,21 +700,63 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
     });
     localeSelect.innerHTML = opts.map(l=>`<option value="${l}" ${l===guess?'selected':''}>${l}</option>`).join('');
   }
+  function applyZoom(value){
+    const zoom = parseFloat(value ?? zoomRange?.value ?? prefs.zoom ?? 1) || 1;
+    document.documentElement.style.setProperty('--zoom', zoom);
+  }
   function applyZoom(){
     document.documentElement.style.setProperty('--zoom', prefs.zoom || 1);
     zoomRange.value = prefs.zoom || 1;
+  function applyColumns(){
+    if(!columnRange) return initialCols;
+    const cols = Math.min(14, Math.max(6, parseInt(columnRange.value || initialCols, 10) || initialCols));
+    document.documentElement.style.setProperty('--cols', cols);
+    if(grid?.column){
+      try{ grid.column(cols); }catch(e){ console.warn('Grid column adjust failed', e); }
+    }else if(grid?.engine){
+      grid.engine.column = cols;
+    }
+    return cols;
   }
   function savePrefs(){
     localStorage.setItem('dash:prefs', JSON.stringify({
       live, tz: tzSelect.value, locale: localeSelect.value, zoom: parseFloat(zoomRange.value||1)
+      live, tz: tzSelect.value, locale: localeSelect.value, zoom: parseFloat(zoomRange?.value||1), cols: parseInt(columnRange?.value || initialCols,10) || initialCols
     }));
   }
+  function pingGlow(){
+    const cards = document.querySelectorAll('.grid-stack-item-content');
+    cards.forEach(card=>{
+      card.classList.add('glow');
+      setTimeout(()=>card.classList.remove('glow'), 600);
+    });
+  }
+  function toggleGlowFromNode(el, on){
+    if(!el) return;
+    const card = el.querySelector('.grid-stack-item-content');
+    if(!card) return;
+    if(on){
+      card.classList.add('glow');
+    }else{
+      card.classList.remove('glow');
+    }
+  }
   populateTimezones(); populateLocales();
+  tzSelect.value = prefs.tz || Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich';
+  localeSelect.value = prefs.locale || (navigator.language||'de-CH');
   tzSelect.value = normalizeTimeZone(prefs.tz) || normalizeTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone) || 'Europe/Zurich';
   if(!tzSelect.value){ tzSelect.value = 'Europe/Zurich'; }
   localeSelect.value = normalizeLocale(prefs.locale) || normalizeLocale(navigator.language) || 'de-CH';
   zoomRange.value = prefs.zoom || 1;
   zoomRange.addEventListener('input', ()=>{ document.documentElement.style.setProperty('--zoom', zoomRange.value); savePrefs(); });
+  tzSelect.addEventListener('change', savePrefs);
+  localeSelect.addEventListener('change', savePrefs);
+  applyZoom(zoomRange.value);
+  if(columnRange){ columnRange.value = initialCols; applyColumns(); }
+  zoomRange.addEventListener('input', ()=>{ applyZoom(); savePrefs(); });
+  if(columnRange){
+    columnRange.addEventListener('input', ()=>{ applyColumns(); savePrefs(); pingGlow(); if(grid?.compact){ setTimeout(()=>grid.compact(), 50); } });
+  }
   tzSelect.addEventListener('change', ()=>{ savePrefs(); globalRefresh(); });
   localeSelect.addEventListener('change', ()=>{ savePrefs(); globalRefresh(); });
 
@@ -321,6 +769,8 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
     const locale = localeSelect.value;
     const fmtTime = new Intl.DateTimeFormat(locale, {hour:'2-digit', minute:'2-digit', second:'2-digit', timeZone: tz});
     const fmtDate = new Intl.DateTimeFormat(locale, {weekday:'long', day:'2-digit', month:'long', year:'numeric', timeZone: tz});
+    titleTime.textContent = fmtTime.format(now);
+    titleDate.textContent = fmtDate.format(now);
     const timeStr = fmtTime.format(now);
     const dateStr = fmtDate.format(now);
     titleTime.textContent = timeStr;
@@ -342,6 +792,9 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
         body.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px">
           <div style="font-size:42px;font-weight:700" data-el="t">--:--</div>
           <div style="font-size:16px;color:var(--muted)" data-el="d">—</div>
+        body.innerHTML = `<div class="clock-card">
+          <div class="clock-time" data-el="t">--:--</div>
+          <div class="clock-date" data-el="d">—</div>
         </div>`;
         const tEl = body.querySelector('[data-el="t"]');
         const dEl = body.querySelector('[data-el="d"]');
@@ -366,16 +819,63 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
           <div><label>Einheiten</label><select data-k="units"><option value="metric" ${cfg.units==='metric'?'selected':''}>Metric (°C)</option><option value="imperial" ${cfg.units==='imperial'?'selected':''}>Imperial (°F)</option></select></div>
         </div>`);
         const body = w.body; body.innerHTML = `<div id="w-main" style="display:flex;align-items:center;gap:16px"><div style="font-size:40px" id="w-temp">--°</div><div><div id="w-city" style="font-weight:600">—</div><div style="color:var(--muted)" id="w-desc">—</div></div></div>`;
+        const body = w.body;
+        body.innerHTML = `<div class="weather-card">
+          <div class="weather-temp" id="w-temp">--°</div>
+          <div class="weather-meta">
+            <div class="weather-city" id="w-city">—</div>
+            <div class="weather-desc" id="w-desc">Konfigurieren</div>
+          </div>
+        </div>
+        <div class="weather-aux">
+          <div><strong id="w-feels">--°</strong>Gefühlt</div>
+          <div><strong id="w-humidity">--%</strong>Feuchtigkeit</div>
+          <div><strong id="w-wind">--</strong>Wind</div>
+        </div>`;
+        const tempEl = body.querySelector('#w-temp');
+        const cityEl = body.querySelector('#w-city');
+        const descEl = body.querySelector('#w-desc');
+        const feelsEl = body.querySelector('#w-feels');
+        const humidityEl = body.querySelector('#w-humidity');
+        const windEl = body.querySelector('#w-wind');
         async function load(){
           if(!cfg.api){ body.querySelector('#w-desc').textContent = 'API Key nötig (OpenWeatherMap)'; return; }
+          const resetPlaceholders = ()=>{ tempEl.textContent = '--°'; feelsEl.textContent = '--°'; humidityEl.textContent = '--%'; windEl.textContent = '--'; };
+          if(!cfg.api){
+            cityEl.textContent = 'API Key nötig';
+            descEl.textContent = 'OpenWeatherMap konfigurieren';
+            resetPlaceholders();
+            return;
+          }
           try{
+            descEl.textContent = 'Lade…';
             const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cfg.city)}&appid=${cfg.api}&units=${cfg.units}`;
             const res = await fetch(url); const j = await res.json();
             body.querySelector('#w-city').textContent = `${j.name}`;
             body.querySelector('#w-temp').textContent = Math.round(j.main.temp) + '°';
             body.querySelector('#w-desc').textContent = j.weather?.[0]?.description || '';
           }catch(e){ body.querySelector('#w-desc').textContent = 'Fehler beim Laden'; }
+            if(j.cod && parseInt(j.cod,10) !== 200){ throw new Error(j.message || 'API Fehler'); }
+            const unitSymbol = cfg.units === 'imperial' ? '°F' : '°C';
+            const temp = typeof j.main?.temp === 'number' ? Math.round(j.main.temp) + unitSymbol : '--';
+            const feels = typeof j.main?.feels_like === 'number' ? Math.round(j.main.feels_like) + unitSymbol : '--';
+            const humidity = typeof j.main?.humidity === 'number' ? Math.round(j.main.humidity) + '%' : '--%';
+            const windRaw = typeof j.wind?.speed === 'number' ? j.wind.speed : NaN;
+            const windUnit = cfg.units === 'imperial' ? 'mph' : 'km/h';
+            const windVal = !Number.isNaN(windRaw) ? Math.round(cfg.units === 'imperial' ? windRaw : windRaw * 3.6) + ' ' + windUnit : '--';
+            cityEl.textContent = j.name || cfg.city;
+            tempEl.textContent = temp;
+            feelsEl.textContent = feels;
+            humidityEl.textContent = humidity;
+            windEl.textContent = windVal;
+            const desc = j.weather?.[0]?.description || '';
+            descEl.textContent = desc ? desc.charAt(0).toUpperCase() + desc.slice(1) : '';
+          }catch(e){
+            descEl.textContent = 'Fehler beim Laden';
+            resetPlaceholders();
+          }
         }
+        w.onCfg(load); load();
         w.interval(load, 300_000);
         w.onCfg(load);
       }
@@ -406,6 +906,9 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
             const r = await fetch(url); const j = await r.json();
             if(!j.items){ throw 0 }
             body.innerHTML = j.items.map(ev=>{
+            if(!j.items){ throw 0; }
+            if(!j.items.length){ body.innerHTML = '<p style="color:var(--muted)">Keine bevorstehenden Termine.</p>'; return; }
+            const events = j.items.map(ev=>{
               const start = ev.start.dateTime || ev.start.date;
               const dt = new Date(start);
               const when = new Intl.DateTimeFormat(localeSelect.value,{weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', timeZone: tzSelect.value}).format(dt);
@@ -413,7 +916,13 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
                 <div style="font-weight:600">${ev.summary||'(ohne Titel)'}</div>
                 <div style="color:var(--muted)">${when}</div>
               </div>`
+              const summary = (ev.summary || '(ohne Titel)').replace(/[&<>]/g, ch=>({ '&':'&amp;','<':'&lt;','>':'&gt;' }[ch]));
+              return `<div class="agenda-event">
+                <div class="agenda-summary">${summary}</div>
+                <div class="agenda-when">${when}</div>
+              </div>`;
             }).join('');
+            body.innerHTML = `<div class="agenda-list">${events}</div>`;
           }catch(e){ body.innerHTML = '<p style="color:var(--muted)">Fehler beim Laden.</p>'; }
         }
         function renderMode(){ cfg.mode==='iframe'?renderIframe():renderApi(); }
@@ -433,6 +942,7 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
         const body = w.body;
         async function load(){
           const ids = cfg.coins.replace(/\s+/g,''); if(!ids){ body.innerHTML = 'Konfigurieren'; return; }
+          const ids = cfg.coins.replace(/\s+/g,''); if(!ids){ body.innerHTML = '<p style="color:var(--muted)">Konfigurieren</p>'; return; }
           const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids)}&vs_currencies=${encodeURIComponent(cfg.currency)}&include_24hr_change=true`;
           try{
             const r = await fetch(url); const j = await r.json();
@@ -444,9 +954,25 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
                 <div style="font-weight:600">${new Intl.NumberFormat(localeSelect.value,{style:'currency', currency: cfg.currency.toUpperCase()}).format(price)}</div>
                 <div style="color:${color}">${sign}${chg.toFixed(2)}%</div>
               </div>`
+            const entries = Object.entries(j||{});
+            if(!entries.length){ body.innerHTML = '<p style="color:var(--muted)">Keine Daten</p>'; return; }
+            const rows = entries.map(([id,data])=>{
+              const price = data[cfg.currency];
+              const chg = data[`${cfg.currency}_24h_change`];
+              const sign = chg>=0?'+':'';
+              const changeClass = Number(chg) === 0 ? '' : (chg>=0 ? 'up' : 'down');
+              const formattedPrice = typeof price === 'number' ? new Intl.NumberFormat(localeSelect.value,{style:'currency', currency: cfg.currency.toUpperCase()}).format(price) : '—';
+              const formattedChange = typeof chg === 'number' ? `${sign}${chg.toFixed(2)}%` : '—';
+              return `<div class="stat-row">
+                <div class="stat-name">${id}</div>
+                <div class="stat-value">${formattedPrice}</div>
+                <div class="stat-change ${changeClass}">${formattedChange}</div>
+              </div>`;
             }).join('');
+            body.innerHTML = `<div class="stat-list">${rows}</div>`;
           }catch(e){ body.innerHTML = '<p style="color:var(--muted)">Fehler beim Laden.</p>'; }
         }
+        w.interval(load, 60_000); w.onCfg(load); load();
         w.interval(load, 300_000); w.onCfg(load);
       }
     },
@@ -466,6 +992,10 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
           body.innerHTML = '';
           for(const s of syms){
             try{
+          if(!syms.length){ body.innerHTML = '<p style="color:var(--muted)">Symbole hinzufügen</p>'; return; }
+          const rows = [];
+          try{
+            for(const s of syms){
               const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(s)}&apikey=${cfg.apiKey}`;
               const r = await fetch(url); const j = await r.json();
               const q = j['Global Quote']||{}; const price = parseFloat(q['05. price']||'NaN'); const chg = parseFloat(q['10. change percent']?.replace('%','')||'NaN');
@@ -475,8 +1005,26 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
               row.innerHTML = `<div>${s}</div><div style="font-weight:600">${isNaN(price)?'—':price.toFixed(2)}</div><div style="color:${color}">${isNaN(chg)?'—':sign+chg.toFixed(2)+'%'}</div>`;
               body.appendChild(row);
             }catch(e){ body.innerHTML = '<p style="color:var(--muted)">Fehler beim Laden.</p>'; break; }
+              const q = j['Global Quote']||{};
+              const price = parseFloat(q['05. price'] ?? 'NaN');
+              const changePercentRaw = q['10. change percent'] ? q['10. change percent'].replace('%','') : 'NaN';
+              const chg = parseFloat(changePercentRaw);
+              const changeClass = Number.isNaN(chg) ? '' : (chg>=0 ? 'up' : 'down');
+              const sign = Number.isNaN(chg) || chg === 0 ? '' : (chg>=0?'+':'');
+              const formattedPrice = Number.isNaN(price) ? '—' : new Intl.NumberFormat(localeSelect.value,{minimumFractionDigits:2, maximumFractionDigits:2}).format(price);
+              const formattedChange = Number.isNaN(chg) ? '—' : `${sign}${chg.toFixed(2)}%`;
+              rows.push(`<div class="stat-row">
+                <div class="stat-name">${s}</div>
+                <div class="stat-value">${formattedPrice}</div>
+                <div class="stat-change ${changeClass}">${formattedChange}</div>
+              </div>`);
+            }
+            body.innerHTML = rows.length ? `<div class="stat-list">${rows.join('')}</div>` : '<p style="color:var(--muted)">Keine Daten</p>';
+          }catch(e){
+            body.innerHTML = '<p style="color:var(--muted)">Fehler beim Laden.</p>';
           }
         }
+        w.interval(load, 60_000); w.onCfg(load); load();
         w.interval(load, 300_000); w.onCfg(load);
       }
     },
@@ -508,6 +1056,7 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
 
   // --- Widget helpers ---
   function Widget(el){
+    this.el = el; this.body = el.querySelector('.w-body'); this.cfgEl = el.querySelector('.cfg'); this.header = el.querySelector('.w-header');
     this.el = el;
     this.body = el.querySelector('.w-body');
     this.cfgEl = el.querySelector('.cfg');
@@ -530,6 +1079,10 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   Widget.prototype.registerRefresh = function(fn){ if(typeof fn==='function' && !this._refreshers.includes(fn)) this._refreshers.push(fn); }
   Widget.prototype.onCfg = function(fn){ (this._cfgHandlers||(this._cfgHandlers=[])).push(fn); }
   Widget.prototype.ensureConfig = function(defaults){ this.config = Object.assign({}, defaults, this.load()||{}); return this.config; }
+  Widget.prototype.save = function(){ const id = this.el.parentElement.getAttribute('gs-id'); state.configs[id] = this.config; persist(); }
+  Widget.prototype.load = function(){ const id = this.el.parentElement.getAttribute('gs-id'); return state.configs[id]; }
+  Widget.prototype.interval = function(fn, ms){ fn(); const t = setInterval(fn, ms); this._timers=(this._timers||[]); this._timers.push(t); }
+  Widget.prototype.destroy = function(){ (this._timers||[]).forEach(clearInterval); }
   Widget.prototype.save = function(){ if(this.id){ state.configs[this.id] = this.config; persist(); } }
   Widget.prototype.load = function(){ return this.id ? state.configs[this.id] : undefined; }
   Widget.prototype.interval = function(fn, ms){
@@ -552,7 +1105,22 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   function saveLayout(){
     const nodes = grid.engine.nodes.map(n=>({x:n.x,y:n.y,w:n.w,h:n.h,id:n.id, type:n.el.querySelector('.widget').dataset.type}));
     state.nodes = nodes; persist(); alert('Layout gespeichert.');
+  function snapshotLayout(opts={}){
+    if(!(grid && grid.engine && Array.isArray(grid.engine.nodes))) return;
+    const nodes = grid.engine.nodes.map(n=>{
+      const el = n.el || gridEl.querySelector(`[gs-id="${n.id}"]`);
+      const widgetEl = el ? el.querySelector('.widget') : null;
+      const type = widgetEl ? widgetEl.dataset.type : undefined;
+      if(type === 'picker'){ return null; }
+      const id = n.id || (el && el.getAttribute('gs-id')) || __uuid();
+      if(!n.id) n.id = id;
+      return { x: n.x, y: n.y, w: n.w, h: n.h, id, type };
+    }).filter(Boolean);
+    state.nodes = nodes;
+    persist();
+    if(opts.notify){ alert('Layout gespeichert.'); }
   }
+  function saveLayout(){ snapshotLayout({notify:true}); }
   function resetLayout(){ if(confirm('Layout & Konfiguration wirklich zurücksetzen?')){ localStorage.removeItem('dash:state'); location.reload(); } }
   document.getElementById('saveLayout').addEventListener('click', saveLayout);
   document.getElementById('resetLayout').addEventListener('click', resetLayout);
@@ -570,6 +1138,8 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
     grid.addWidget(item);
     mount(content);
     updateEmpty();
+    pingGlow();
+    snapshotLayout();
   }
 
   function addPicker(){
@@ -584,6 +1154,20 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   }
 
   document.getElementById('addWidget').addEventListener('click', addPicker);
+  if(autoLayoutBtn){
+    autoLayoutBtn.addEventListener('click', ()=>{
+      try{
+        if(grid?.batchUpdate){
+          grid.batchUpdate(()=>{ grid.compact(); });
+          if(typeof grid.commit === 'function'){ grid.commit(); }
+        }else if(typeof grid?.compact === 'function'){
+          grid.compact();
+        }
+      }catch(e){ console.warn('Auto layout failed', e); }
+      pingGlow();
+      setTimeout(()=>snapshotLayout(), 120);
+    });
+  }
 
   // --- Mount a widget element ---
   function mount(content){
@@ -600,6 +1184,7 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
       if(confirm('Widget entfernen?')){
         const node = content.closest('.grid-stack-item');
         grid.removeWidget(node); delete state.configs[node.getAttribute('gs-id')]; persist(); updateEmpty();
+        grid.removeWidget(node); delete state.configs[node.getAttribute('gs-id')]; snapshotLayout(); updateEmpty();
         w.destroy();
       }
     });
@@ -631,11 +1216,13 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
       addWidget('custom');
     }
     updateEmpty();
+    snapshotLayout();
   }
   restore();
 
   // Apply prefs on start
   live = !!prefs.live; applyMode(); applyZoom();
+  live = !!prefs.live; applyMode(); applyZoom(); applyColumns();
 
   }
 })();
