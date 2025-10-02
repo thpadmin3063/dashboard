@@ -548,7 +548,7 @@
       <div class="w-header"><div class="w-title">Widget hinzufügen</div><div class="w-actions"><button class="iconBtn icon-del">🗑️</button></div></div>
       <div class="w-body">
         <div class="row-3">
-@@ -275,414 +371,611 @@
+@@ -275,414 +371,615 @@
 <script>
 // Global error catcher to avoid silent failures and show a helpful message
 window.addEventListener('error', (e)=>{
@@ -575,6 +575,9 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   const gridEl = document.getElementById('grid');
   const emptyState = document.getElementById('emptyState');
   const mountedWidgets = new Map();
+  const prefs = JSON.parse(localStorage.getItem('dash:prefs')||'{}');
+  const initialCols = Math.min(14, Math.max(6, parseInt(prefs.cols || 12, 10) || 12));
+  let live = !!prefs.live;
 
   // --- Layout engine ---
   let grid;
@@ -635,11 +638,17 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
       toggleBtn.textContent = 'Bearbeiten';
       modeBadge.style.display = 'none';
       grid.setStatic(true);
+      grid?.setStatic?.(true);
+      if(grid?.enableMove){ grid.enableMove(false); }
+      if(grid?.enableResize){ grid.enableResize(false); }
     }else{
       toggleBtn.textContent = 'Live‑Modus';
       modeBadge.style.display = '';
       modeBadge.textContent = 'Bearbeitungsmodus';
       grid.setStatic(false);
+      grid?.setStatic?.(false);
+      if(grid?.enableMove){ grid.enableMove(true); }
+      if(grid?.enableResize){ grid.enableResize(true); }
       pingGlow();
     }
   }
@@ -649,14 +658,12 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   const tzSelect = document.getElementById('tzSelect');
   const localeSelect = document.getElementById('localeSelect');
   const zoomRange = document.getElementById('zoomRange');
+  const prefs = JSON.parse(localStorage.getItem('dash:prefs')||'{}');
   const columnRange = document.getElementById('columnRange');
   const autoLayoutBtn = document.getElementById('autoLayout');
   const gridHint = document.querySelector('.grid-hint');
   const defaultGridHint = gridHint ? gridHint.innerHTML : '';
   const emptyGridHint = "Noch keine Widgets. Tippe auf <strong>+ Widget</strong> für deinen Start.";
-  const prefs = JSON.parse(localStorage.getItem('dash:prefs')||'{}');
-  const initialCols = Math.min(14, Math.max(6, parseInt(prefs.cols || 12, 10) || 12));
-  let live = !!prefs.live;
 
   function normalizeLocale(loc){
     if(!loc) return null;
@@ -1222,7 +1229,7 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
 
   // Apply prefs on start
   live = !!prefs.live; applyMode(); applyZoom();
-  live = !!prefs.live; applyMode(); applyZoom(); applyColumns();
+  applyMode(); applyZoom(); applyColumns();
 
   }
 })();
