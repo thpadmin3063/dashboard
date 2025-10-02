@@ -66,10 +66,36 @@
       color: var(--text-soft);
     }
 
+    .headline-side {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: flex-end;
+      min-width: clamp(220px, 40vw, 360px);
+    }
+
     .headline-controls {
       display: flex;
       flex-wrap: wrap;
       gap: 0.75rem;
+    }
+
+    .headline-mode {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .mode-toggle {
+      padding-inline: 1.15rem;
+      font-weight: 600;
+    }
+
+    .timezone-info {
+      color: var(--text-soft);
+      font-size: 0.85rem;
     }
 
     .control {
@@ -134,9 +160,9 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 320px;
-      min-width: 220px;
-      min-height: 180px;
+      width: clamp(320px, 32vw, 520px);
+      min-width: 260px;
+      min-height: 220px;
       border-radius: 1.25rem;
       border: 1px solid var(--border);
       background: var(--surface);
@@ -193,6 +219,18 @@
       gap: 0.75rem;
     }
 
+    .widget-config {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .widget-config-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
     .info-line {
       display: flex;
       align-items: center;
@@ -202,6 +240,11 @@
 
     .muted {
       color: var(--text-soft);
+      font-size: 0.85rem;
+    }
+
+    .widget-status {
+      display: block;
       font-size: 0.85rem;
     }
 
@@ -264,10 +307,38 @@
 
     iframe.webpart-frame {
       width: 100%;
-      min-height: 180px;
+      min-height: 320px;
       border: none;
       border-radius: 0.75rem;
       background: rgba(15, 23, 42, 0.4);
+    }
+
+    .widget[data-widget="custom"] {
+      min-height: 420px;
+    }
+
+    body.live-mode .headline-controls {
+      display: none;
+    }
+
+    body.live-mode .widget-config {
+      display: none !important;
+    }
+
+    body.live-mode .widget-handle {
+      cursor: default;
+    }
+
+    body.live-mode .widget {
+      border-color: rgba(148, 163, 184, 0.18);
+    }
+
+    body.live-mode .remove-custom {
+      display: none !important;
+    }
+
+    body.live-mode [data-edit-only] {
+      display: none !important;
     }
 
     @media (max-width: 880px) {
@@ -290,33 +361,39 @@
       <time id="currentTime" aria-live="polite">--:--</time>
       <span id="currentDate">---</span>
     </div>
-    <div class="headline-controls">
-      <div class="control">
-        <label for="localeSelect">Region / Sprache</label>
-        <select id="localeSelect">
-          <option value="de-CH">Deutsch (Schweiz)</option>
-          <option value="de-DE">Deutsch (Deutschland)</option>
-          <option value="de-AT">Deutsch (Österreich)</option>
-          <option value="en-US">English (USA)</option>
-          <option value="fr-FR">Français (France)</option>
-          <option value="it-IT">Italiano (Italia)</option>
-        </select>
+    <div class="headline-side">
+      <div class="headline-controls">
+        <div class="control">
+          <label for="localeSelect">Region / Sprache</label>
+          <select id="localeSelect">
+            <option value="de-CH">Deutsch (Schweiz)</option>
+            <option value="de-DE">Deutsch (Deutschland)</option>
+            <option value="de-AT">Deutsch (Österreich)</option>
+            <option value="en-US">English (USA)</option>
+            <option value="fr-FR">Français (France)</option>
+            <option value="it-IT">Italiano (Italia)</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="timezoneSelect">Zeitzone</label>
+          <select id="timezoneSelect">
+            <option value="Europe/Zurich">Europa / Zürich</option>
+            <option value="Europe/Berlin">Europa / Berlin</option>
+            <option value="Europe/Vienna">Europa / Wien</option>
+            <option value="America/New_York">Amerika / New York</option>
+            <option value="Asia/Tokyo">Asien / Tokio</option>
+            <option value="Australia/Sydney">Australien / Sydney</option>
+            <option value="custom">Eigene Eingabe</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="customTimezone">Eigene Zeitzone</label>
+          <input id="customTimezone" type="text" placeholder="z.B. Europe/Paris" />
+        </div>
       </div>
-      <div class="control">
-        <label for="timezoneSelect">Zeitzone</label>
-        <select id="timezoneSelect">
-          <option value="Europe/Zurich">Europa / Zürich</option>
-          <option value="Europe/Berlin">Europa / Berlin</option>
-          <option value="Europe/Vienna">Europa / Wien</option>
-          <option value="America/New_York">Amerika / New York</option>
-          <option value="Asia/Tokyo">Asien / Tokio</option>
-          <option value="Australia/Sydney">Australien / Sydney</option>
-          <option value="custom">Eigene Eingabe</option>
-        </select>
-      </div>
-      <div class="control">
-        <label for="customTimezone">Eigene Zeitzone</label>
-        <input id="customTimezone" type="text" placeholder="z.B. Europe/Paris" />
+      <div class="headline-mode">
+        <button type="button" id="modeToggle" class="mode-toggle">Live-Modus starten</button>
+        <span id="timezoneInfo" class="timezone-info"></span>
       </div>
     </div>
   </div>
@@ -331,30 +408,34 @@
           </div>
         </div>
         <div class="widget-body">
-          <div class="grid-two">
-            <div>
-              <label for="calendarApiKey">API-Key</label>
-              <input type="text" id="calendarApiKey" placeholder="AIza..." />
+          <div class="widget-config">
+            <div class="grid-two">
+              <div>
+                <label for="calendarApiKey">API-Key</label>
+                <input type="text" id="calendarApiKey" placeholder="AIza..." />
+              </div>
+              <div>
+                <label for="calendarId">Kalender-ID</label>
+                <input type="text" id="calendarId" placeholder="name@gmail.com" />
+              </div>
+              <div>
+                <label for="calendarMax">Anzahl Termine</label>
+                <select id="calendarMax">
+                  <option value="5">5</option>
+                  <option value="10" selected>10</option>
+                  <option value="15">15</option>
+                </select>
+              </div>
+              <div>
+                <label for="calendarTimeRange">Zeitraum (Tage)</label>
+                <input type="number" id="calendarTimeRange" value="7" min="1" max="30" />
+              </div>
             </div>
-            <div>
-              <label for="calendarId">Kalender-ID</label>
-              <input type="text" id="calendarId" placeholder="name@gmail.com" />
-            </div>
-            <div>
-              <label for="calendarMax">Anzahl Termine</label>
-              <select id="calendarMax">
-                <option value="5">5</option>
-                <option value="10" selected>10</option>
-                <option value="15">15</option>
-              </select>
-            </div>
-            <div>
-              <label for="calendarTimeRange">Zeitraum (Tage)</label>
-              <input type="number" id="calendarTimeRange" value="7" min="1" max="30" />
+            <div class="widget-config-actions">
+              <button type="button" id="calendarLoad">Termine laden</button>
             </div>
           </div>
-          <button type="button" id="calendarLoad">Termine laden</button>
-          <div id="calendarStatus" class="muted">API-Key und Kalender-ID werden nur lokal gespeichert.</div>
+          <div id="calendarStatus" class="muted widget-status">API-Key und Kalender-ID werden nur lokal gespeichert.</div>
           <div id="calendarEvents" class="list"></div>
         </div>
       </article>
@@ -367,17 +448,19 @@
           </div>
         </div>
         <div class="widget-body">
-          <div class="grid-two">
-            <div>
-              <label for="weatherCity">Ort</label>
-              <input type="text" id="weatherCity" placeholder="Zürich" />
+          <div class="widget-config">
+            <div class="grid-two">
+              <div>
+                <label for="weatherCity">Ort</label>
+                <input type="text" id="weatherCity" placeholder="Zürich" />
+              </div>
+              <div>
+                <label for="weatherCountry">Land-Code</label>
+                <input type="text" id="weatherCountry" placeholder="CH" maxlength="2" />
+              </div>
             </div>
-            <div>
-              <label for="weatherCountry">Land-Code</label>
-              <input type="text" id="weatherCountry" placeholder="CH" maxlength="2" />
-            </div>
+            <button type="button" id="weatherLoad">Wetter abrufen</button>
           </div>
-          <button type="button" id="weatherLoad">Wetter abrufen</button>
           <div id="weatherContent" class="list"></div>
         </div>
       </article>
@@ -390,21 +473,23 @@
           </div>
         </div>
         <div class="widget-body">
-          <div class="grid-two">
-            <div>
-              <label for="cryptoSymbols">Coins (Kommagetrennt)</label>
-              <input type="text" id="cryptoSymbols" placeholder="bitcoin,ethereum,cardano" />
+          <div class="widget-config">
+            <div class="grid-two">
+              <div>
+                <label for="cryptoSymbols">Coins (Kommagetrennt)</label>
+                <input type="text" id="cryptoSymbols" placeholder="bitcoin,ethereum,cardano" />
+              </div>
+              <div>
+                <label for="cryptoCurrency">Vergleichswährung</label>
+                <select id="cryptoCurrency">
+                  <option value="chf">CHF</option>
+                  <option value="eur">EUR</option>
+                  <option value="usd" selected>USD</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label for="cryptoCurrency">Vergleichswährung</label>
-              <select id="cryptoCurrency">
-                <option value="chf">CHF</option>
-                <option value="eur">EUR</option>
-                <option value="usd" selected>USD</option>
-              </select>
-            </div>
+            <button type="button" id="cryptoLoad">Kurse laden</button>
           </div>
-          <button type="button" id="cryptoLoad">Kurse laden</button>
           <div id="cryptoContent" class="list"></div>
         </div>
       </article>
@@ -417,34 +502,38 @@
           </div>
         </div>
         <div class="widget-body">
-          <div class="grid-two">
-            <div>
-              <label for="stocksSymbols">Ticker (Kommagetrennt)</label>
-              <input type="text" id="stocksSymbols" placeholder="AAPL,MSFT,TSLA" />
+          <div class="widget-config">
+            <div class="grid-two">
+              <div>
+                <label for="stocksSymbols">Ticker (Kommagetrennt)</label>
+                <input type="text" id="stocksSymbols" placeholder="AAPL,MSFT,TSLA" />
+              </div>
+              <div>
+                <label for="stocksApiKey">Alpha Vantage API-Key</label>
+                <input type="text" id="stocksApiKey" placeholder="demo" />
+              </div>
             </div>
-            <div>
-              <label for="stocksApiKey">Alpha Vantage API-Key</label>
-              <input type="text" id="stocksApiKey" placeholder="demo" />
-            </div>
+            <button type="button" id="stocksLoad">Kurse laden</button>
           </div>
-          <button type="button" id="stocksLoad">Kurse laden</button>
           <div id="stocksContent" class="list"></div>
         </div>
       </article>
 
-      <article class="widget" data-widget="custom" data-id="custom" style="transform: translate(680px, 0px); width: 340px;">
+      <article class="widget" data-widget="custom" data-id="custom" style="transform: translate(680px, 0px);">
         <div class="widget-handle">
           <span>Eigene Webparts</span>
           <div class="widget-actions">
-            <button type="button" id="addWebpart">＋</button>
+            <button type="button" id="addWebpart" data-edit-only>＋</button>
           </div>
         </div>
         <div class="widget-body">
-          <form class="custom-form" id="customForm">
-            <input type="text" id="customTitle" placeholder="Titel" required />
-            <input type="url" id="customUrl" placeholder="https://..." required />
-            <button type="submit">Webpart hinzufügen</button>
-          </form>
+          <div class="widget-config">
+            <form class="custom-form" id="customForm">
+              <input type="text" id="customTitle" placeholder="Titel" required />
+              <input type="url" id="customUrl" placeholder="https://..." required />
+              <button type="submit">Webpart hinzufügen</button>
+            </form>
+          </div>
           <div id="customParts" class="list"></div>
         </div>
       </article>
@@ -467,7 +556,8 @@
       STOCKS_SYMBOLS: 'dashboard.stocksSymbols',
       STOCKS_KEY: 'dashboard.stocksKey',
       CUSTOM_PARTS: 'dashboard.customParts',
-      WIDGET_STATE: 'dashboard.widgetState'
+      WIDGET_STATE: 'dashboard.widgetState',
+      MODE: 'dashboard.mode'
     };
 
     const localeSelect = document.getElementById('localeSelect');
@@ -475,6 +565,10 @@
     const customTimezone = document.getElementById('customTimezone');
     const currentTimeEl = document.getElementById('currentTime');
     const currentDateEl = document.getElementById('currentDate');
+    const timezoneInfo = document.getElementById('timezoneInfo');
+    const modeToggle = document.getElementById('modeToggle');
+
+    let isEditMode = localStorage.getItem(STORAGE_KEYS.MODE) !== 'live';
 
     function restoreSelects() {
       const savedLocale = localStorage.getItem(STORAGE_KEYS.LOCALE);
@@ -517,8 +611,14 @@
         });
         currentTimeEl.textContent = timeFormatter.format(now);
         currentDateEl.textContent = dateFormatter.format(now);
+        if (timezoneInfo) {
+          timezoneInfo.textContent = `Zeitzone: ${timeZone}`;
+        }
       } catch (error) {
         currentDateEl.textContent = 'Ungültige Region oder Zeitzone';
+        if (timezoneInfo) {
+          timezoneInfo.textContent = 'Ungültige Zeitzone';
+        }
       }
     }
 
@@ -583,13 +683,13 @@
 
       if (!apiKey || !calendarId) {
         status.textContent = 'Bitte API-Key und Kalender-ID eintragen.';
-        status.className = 'error';
+        status.className = 'widget-status error';
         eventsContainer.innerHTML = '';
         return;
       }
 
       status.textContent = 'Lade Termine...';
-      status.className = 'muted';
+      status.className = 'widget-status muted';
       eventsContainer.innerHTML = '';
 
       const timeMin = new Date().toISOString();
@@ -608,11 +708,11 @@
         const data = await res.json();
         if (!data.items?.length) {
           status.textContent = 'Keine Termine im gewählten Zeitraum gefunden.';
-          status.className = 'muted';
+          status.className = 'widget-status muted';
           return;
         }
         status.textContent = `${data.items.length} Termine geladen.`;
-        status.className = 'success';
+        status.className = 'widget-status success';
         const locale = localeSelect.value;
         const timeZone = getActiveTimezone();
         eventsContainer.innerHTML = data.items.map(event => {
@@ -635,7 +735,7 @@
         }).join('');
       } catch (error) {
         status.textContent = `Fehler beim Abruf: ${error.message}`;
-        status.className = 'error';
+        status.className = 'widget-status error';
       }
     }
 
@@ -844,7 +944,7 @@
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_PARTS) || '[]');
       customPartsContainer.innerHTML = saved.map((part, index) => `
         <div class="list-item">
-          <div class="info-line"><strong>${part.title}</strong><button type="button" data-index="${index}" class="remove-custom">Entfernen</button></div>
+          <div class="info-line"><strong>${part.title}</strong><button type="button" data-index="${index}" class="remove-custom" data-edit-only>Entfernen</button></div>
           <iframe class="webpart-frame" src="${part.url}" loading="lazy" title="${part.title}"></iframe>
         </div>
       `).join('');
@@ -883,14 +983,33 @@
         const id = widget.dataset.id;
         const saved = state[id];
         if (saved) {
-          widget.style.transform = `translate(${saved.x}px, ${saved.y}px)`;
-          widget.style.width = saved.width;
-          widget.style.height = saved.height;
-          widget.dataset.x = saved.x;
-          widget.dataset.y = saved.y;
+          const savedX = typeof saved.x === 'number' ? saved.x : 0;
+          const savedY = typeof saved.y === 'number' ? saved.y : 0;
+          widget.style.transform = `translate(${savedX}px, ${savedY}px)`;
+          widget.dataset.x = savedX;
+          widget.dataset.y = savedY;
+          if (saved.width) {
+            widget.style.width = saved.width;
+          } else {
+            widget.style.removeProperty('width');
+          }
+          if (saved.height) {
+            widget.style.height = saved.height;
+          } else {
+            widget.style.removeProperty('height');
+          }
         } else {
-          widget.dataset.x = 0;
-          widget.dataset.y = 0;
+          const match = widget.style.transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+          if (match) {
+            widget.dataset.x = Number(match[1]);
+            widget.dataset.y = Number(match[2]);
+          } else {
+            widget.dataset.x = 0;
+            widget.dataset.y = 0;
+            widget.style.transform = 'translate(0px, 0px)';
+          }
+          widget.style.removeProperty('width');
+          widget.style.removeProperty('height');
         }
       });
     }
@@ -902,52 +1021,81 @@
         state[id] = {
           x: Number(widget.dataset.x) || 0,
           y: Number(widget.dataset.y) || 0,
-          width: widget.style.width || '320px',
-          height: widget.style.height || 'auto'
+          width: widget.style.width || null,
+          height: widget.style.height || null
         };
       });
       localStorage.setItem(STORAGE_KEYS.WIDGET_STATE, JSON.stringify(state));
     }
 
-    interact('.widget').draggable({
+    function handleDragMove(event) {
+      const target = event.target;
+      const x = (parseFloat(target.dataset.x) || 0) + event.dx;
+      const y = (parseFloat(target.dataset.y) || 0) + event.dy;
+      target.style.transform = `translate(${x}px, ${y}px)`;
+      target.dataset.x = x;
+      target.dataset.y = y;
+    }
+
+    function handleResizeMove(event) {
+      let { x, y } = event.target.dataset;
+      x = parseFloat(x) || 0;
+      y = parseFloat(y) || 0;
+
+      x += event.deltaRect.left;
+      y += event.deltaRect.top;
+
+      event.target.style.width = `${event.rect.width}px`;
+      event.target.style.height = `${event.rect.height}px`;
+      event.target.style.transform = `translate(${x}px, ${y}px)`;
+
+      event.target.dataset.x = x;
+      event.target.dataset.y = y;
+    }
+
+    const dragConfig = {
       allowFrom: '.widget-handle',
       listeners: {
-        move (event) {
-          const target = event.target;
-          const x = (parseFloat(target.dataset.x) || 0) + event.dx;
-          const y = (parseFloat(target.dataset.y) || 0) + event.dy;
-          target.style.transform = `translate(${x}px, ${y}px)`;
-          target.dataset.x = x;
-          target.dataset.y = y;
-        },
+        move: handleDragMove,
         end: persistWidgetState
       }
-    }).resizable({
+    };
+
+    const resizeConfig = {
       edges: { left: true, right: true, bottom: true, top: true },
       listeners: {
-        move (event) {
-          let { x, y } = event.target.dataset;
-          x = parseFloat(x) || 0;
-          y = parseFloat(y) || 0;
-
-          x += event.deltaRect.left;
-          y += event.deltaRect.top;
-
-          event.target.style.width = event.rect.width + 'px';
-          event.target.style.height = event.rect.height + 'px';
-          event.target.style.transform = `translate(${x}px, ${y}px)`;
-
-          event.target.dataset.x = x;
-          event.target.dataset.y = y;
-        },
+        move: handleResizeMove,
         end: persistWidgetState
       },
       modifiers: [
-        interact.modifiers.restrictSize({ min: { width: 220, height: 150 } })
+        interact.modifiers.restrictSize({ min: { width: 260, height: 220 } })
       ]
-    });
+    };
+
+    const widgetInteractable = interact('.widget');
+    widgetInteractable.draggable(dragConfig);
+    widgetInteractable.resizable(resizeConfig);
+
+    function applyMode() {
+      document.body.classList.toggle('live-mode', !isEditMode);
+      if (modeToggle) {
+        modeToggle.textContent = isEditMode ? 'Live-Modus starten' : 'Bearbeitungsmodus aktivieren';
+        modeToggle.setAttribute('aria-pressed', String(!isEditMode));
+      }
+      widgetInteractable.draggable({ ...dragConfig, enabled: isEditMode });
+      widgetInteractable.resizable({ ...resizeConfig, enabled: isEditMode });
+    }
+
+    if (modeToggle) {
+      modeToggle.addEventListener('click', () => {
+        isEditMode = !isEditMode;
+        localStorage.setItem(STORAGE_KEYS.MODE, isEditMode ? 'edit' : 'live');
+        applyMode();
+      });
+    }
 
     restoreWidgetState();
+    applyMode();
 
     // Initial data load if credentials are already stored
     if (document.getElementById('calendarApiKey').value && document.getElementById('calendarId').value) {
