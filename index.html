@@ -273,9 +273,27 @@
 </template>
 
 <script>
+// Global error catcher to avoid silent failures and show a helpful message
+window.addEventListener('error', (e)=>{
+  try{
+    const msg = (e && e.message) ? e.message : 'Unbekannter Scriptfehler';
+    let box = document.getElementById('bootError');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'bootError';
+      box.style.cssText='position:fixed;left:16px;right:16px;top:16px;z-index:10000;background:#2a0f12;color:#ffd2d2;border:1px solid #ff5d5d;border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);font:13px system-ui';
+      document.body.appendChild(box);
+    }
+    box.innerHTML = '<b>Dashboard-Skriptfehler:</b> '+ msg + '<br><small>Bitte Screenshot senden – ich härte es dann sofort aus.</small>';
+  }catch(_){/* ignore */}
+});
 // Robust UUID helper for older environments
 const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => crypto.randomUUID() : () => 'id-' + (Math.random().toString(36).slice(2)) + '-' + Date.now();
 (function(){
+  // Ensure code runs after DOM is ready even if script is moved
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initDash); } else { initDash(); }
+  function initDash(){
+
   const app = document.getElementById('app');
   const gridEl = document.getElementById('grid');
   const emptyState = document.getElementById('emptyState');
@@ -663,6 +681,7 @@ const __uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? () => cryp
   // Apply prefs on start
   live = !!prefs.live; applyMode(); applyZoom();
 
+  }
 })();
 </script>
 </body>
