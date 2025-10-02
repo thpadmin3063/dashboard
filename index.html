@@ -3,769 +3,964 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Persönlichkeitsautomat 3000</title>
-  <title>Personal Dashboard</title>
+  <title>Personalisiertes Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 2rem; background: #fefefe; color: #333; }
-    h1 { text-align: center; }
-    textarea, input, select, button {
-      width: 100%; padding: 8px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc;
-    }
-    button { background: #4caf50; color: white; border: none; cursor: pointer; }
-    button:hover { background: #45a049; }
-    .frage-container { margin-top: 1rem; }
-    #profil { white-space: pre-wrap; background: #f4f4f4; padding: 1rem; border-radius: 5px; margin-top: 1rem; }
     :root {
-      color-scheme: light dark;
-      --bg: #0f172a;
-      --card: rgba(15, 23, 42, 0.75);
-      --card-border: rgba(255, 255, 255, 0.08);
+      color-scheme: dark;
+      --bg: #05060a;
+      --surface: rgba(18, 23, 33, 0.92);
+      --surface-hover: rgba(32, 42, 58, 0.92);
+      --border: rgba(148, 163, 184, 0.22);
+      --border-strong: rgba(148, 163, 184, 0.35);
       --text: #e2e8f0;
-      --text-muted: #94a3b8;
+      --text-soft: #94a3b8;
       --accent: #38bdf8;
       --accent-soft: rgba(56, 189, 248, 0.15);
+      --success: #4ade80;
+      --warning: #facc15;
+      --danger: #f87171;
     }
 
-    * { box-sizing: border-box; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       min-height: 100vh;
       font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: radial-gradient(circle at top left, #1e293b, #020617 55%);
+      background: radial-gradient(circle at top, #111827 0%, #05060a 55%);
       color: var(--text);
       display: flex;
       flex-direction: column;
-      padding: 2rem min(4vw, 3rem) 3rem;
-      gap: 2rem;
+      gap: 1.5rem;
+      padding: clamp(1.25rem, 2vw, 2.75rem);
+      overflow-x: hidden;
     }
 
-    header {
+    .headline {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
       align-items: flex-end;
-      gap: 1rem;
+      justify-content: space-between;
+      gap: 1.25rem;
     }
 
-    header h1 {
-      font-size: clamp(2.2rem, 4vw, 3rem);
-      margin: 0;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    header p {
-      margin: 0;
-      color: var(--text-muted);
-      font-size: 1rem;
-      max-width: 520px;
-      line-height: 1.5;
-    }
-
-    main {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-
-    section {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 1.5rem;
-      backdrop-filter: blur(18px);
-      position: relative;
+    .headline-time {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.45);
+      gap: 0.25rem;
     }
 
-    section h2 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
+    .headline-time time {
+      font-size: clamp(2.25rem, 6vw, 4.25rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .headline-time span {
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      color: var(--text-soft);
+    }
+
+    .headline-controls {
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      min-width: 160px;
     }
 
     label {
-      display: block;
-      font-size: 0.85rem;
-      letter-spacing: 0.02em;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
     }
 
-    input, select, button, textarea {
-      width: 100%;
-      padding: 0.75rem 0.85rem;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(15, 23, 42, 0.4);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 0.95rem;
-      transition: border-color 0.2s ease, transform 0.2s ease;
+    select, input, button, textarea {
+      font: inherit;
+      color: inherit;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 0.9rem;
+      padding: 0.65rem 0.8rem;
+      transition: border 0.2s ease, background 0.2s ease, transform 0.2s ease;
     }
 
-    input:focus, select:focus, textarea:focus {
+    select:focus, input:focus, textarea:focus {
       outline: none;
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-soft);
     }
 
-    textarea { resize: vertical; min-height: 120px; }
-
     button {
-      background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(14, 165, 233, 0.9));
+      background: linear-gradient(140deg, rgba(56, 189, 248, 0.85), rgba(14, 165, 233, 0.85));
       border: none;
       font-weight: 600;
       cursor: pointer;
+      color: #0b1220;
     }
 
     button:hover {
       transform: translateY(-1px);
+      background: linear-gradient(140deg, rgba(56, 189, 248, 0.95), rgba(14, 165, 233, 0.95));
     }
 
-    .pill {
-      display: inline-flex;
+    main {
+      position: relative;
+      min-height: 60vh;
+      border-radius: 1.5rem;
+      border: 1px solid var(--border);
+      background: linear-gradient(145deg, rgba(15, 18, 28, 0.9), rgba(7, 10, 18, 0.85));
+      padding: clamp(1rem, 2vw, 1.5rem);
+      overflow: hidden;
+    }
+
+    .dashboard {
+      position: relative;
+      min-height: 58vh;
+    }
+
+    .widget {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 320px;
+      min-width: 220px;
+      min-height: 180px;
+      border-radius: 1.25rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 35px rgba(8, 12, 20, 0.55);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .widget:hover {
+      border-color: var(--border-strong);
+    }
+
+    .widget-handle {
+      cursor: move;
+      display: flex;
       align-items: center;
-      gap: 0.25rem;
-      padding: 0.35rem 0.75rem;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      background: rgba(15, 23, 42, 0.65);
       font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .widget-actions {
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    .widget-actions button {
+      padding: 0.35rem 0.55rem;
+      border-radius: 0.65rem;
+      background: rgba(15, 23, 42, 0.55);
+      color: var(--text-soft);
+      border: 1px solid rgba(148, 163, 184, 0.2);
       font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+    }
+
+    .widget-actions button:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      transform: none;
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    .widget-body {
+      padding: 1rem 1.1rem 1.25rem;
+      overflow: auto;
+      flex: 1;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .info-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.95rem;
+    }
+
+    .muted {
+      color: var(--text-soft);
+      font-size: 0.85rem;
     }
 
     .list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
+      display: grid;
+      gap: 0.6rem;
     }
 
     .list-item {
       padding: 0.75rem 0.85rem;
-      border-radius: 12px;
+      border-radius: 0.85rem;
       background: rgba(15, 23, 42, 0.55);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      display: flex;
-      flex-direction: column;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      display: grid;
       gap: 0.35rem;
     }
 
-    .list-item strong { font-size: 1rem; }
+    .remove-custom {
+      background: rgba(248, 113, 113, 0.12);
+      color: var(--danger);
+      border-color: rgba(248, 113, 113, 0.35);
+    }
 
-    .muted { color: var(--text-muted); font-size: 0.85rem; }
+    .remove-custom:hover {
+      background: rgba(248, 113, 113, 0.2);
+      color: #fee2e2;
+      border-color: rgba(248, 113, 113, 0.55);
+    }
 
-    .calendar-controls, .weather-controls, .stocks-controls {
+    .grid-two {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 0.75rem;
     }
 
-    .stocks-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    .error {
+      color: var(--danger);
+      font-size: 0.85rem;
+    }
+
+    .success {
+      color: var(--success);
+      font-size: 0.85rem;
+    }
+
+    .custom-form {
+      display: flex;
+      flex-wrap: wrap;
       gap: 0.75rem;
     }
 
-    .empty-state {
-      border: 1px dashed rgba(148, 163, 184, 0.4);
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.95rem;
+    .custom-form input {
+      flex: 1 1 200px;
     }
 
-    .notes {
-      min-height: 220px;
+    .custom-form button {
+      flex: 1 1 140px;
+      min-width: 140px;
     }
 
-    footer {
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-muted);
+    iframe.webpart-frame {
+      width: 100%;
+      min-height: 180px;
+      border: none;
+      border-radius: 0.75rem;
+      background: rgba(15, 23, 42, 0.4);
     }
 
-    @media (max-width: 720px) {
-      body { padding: 1.5rem 1.25rem 2.5rem; }
-      main { gap: 1rem; }
-      section { padding: 1.25rem; }
+    @media (max-width: 880px) {
+      .widget {
+        position: relative;
+        width: auto !important;
+        height: auto !important;
+        transform: none !important;
+        margin-bottom: 1rem;
+      }
+      main {
+        overflow: visible;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>🎛️ Persönlichkeitsautomat 3000</h1>
-  <label>API-Key</label>
-  <input id="apiKey" type="text" placeholder="sk-..." />
-  <div id="statusBox"></div>
-  <header>
-    <div>
-      <h1>Control Center</h1>
-      <p>Dein persönliches Web-Dashboard mit Kalender, Wetter, Aktienkursen und schnellen Notizen. Hinterlege deine API-Keys, passe die Widgets an und starte mit einem Blick in den Tag.</p>
+  <div class="headline">
+    <div class="headline-time">
+      <time id="currentTime" aria-live="polite">--:--</time>
+      <span id="currentDate">---</span>
     </div>
-    <div class="pill">Live Widgets</div>
-  </header>
+    <div class="headline-controls">
+      <div class="control">
+        <label for="localeSelect">Region / Sprache</label>
+        <select id="localeSelect">
+          <option value="de-CH">Deutsch (Schweiz)</option>
+          <option value="de-DE">Deutsch (Deutschland)</option>
+          <option value="de-AT">Deutsch (Österreich)</option>
+          <option value="en-US">English (USA)</option>
+          <option value="fr-FR">Français (France)</option>
+          <option value="it-IT">Italiano (Italia)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="timezoneSelect">Zeitzone</label>
+        <select id="timezoneSelect">
+          <option value="Europe/Zurich">Europa / Zürich</option>
+          <option value="Europe/Berlin">Europa / Berlin</option>
+          <option value="Europe/Vienna">Europa / Wien</option>
+          <option value="America/New_York">Amerika / New York</option>
+          <option value="Asia/Tokyo">Asien / Tokio</option>
+          <option value="Australia/Sydney">Australien / Sydney</option>
+          <option value="custom">Eigene Eingabe</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="customTimezone">Eigene Zeitzone</label>
+        <input id="customTimezone" type="text" placeholder="z.B. Europe/Paris" />
+      </div>
+    </div>
+  </div>
 
   <main>
-    <section id="calendar-section">
-      <h2>📅 Google Kalender</h2>
-      <div class="calendar-controls">
-        <div>
-          <label for="calendarApiKey">Google API-Key</label>
-          <input type="text" id="calendarApiKey" placeholder="AIza..." />
+    <div class="dashboard" id="dashboard">
+      <article class="widget" data-widget="calendar" data-id="calendar" style="transform: translate(0px, 0px);">
+        <div class="widget-handle">
+          <span>Google Kalender</span>
+          <div class="widget-actions">
+            <button type="button" data-action="refresh">↻</button>
+          </div>
         </div>
-        <div>
-          <label for="calendarId">Kalender-ID</label>
-          <input type="text" id="calendarId" placeholder="example@gmail.com" />
+        <div class="widget-body">
+          <div class="grid-two">
+            <div>
+              <label for="calendarApiKey">API-Key</label>
+              <input type="text" id="calendarApiKey" placeholder="AIza..." />
+            </div>
+            <div>
+              <label for="calendarId">Kalender-ID</label>
+              <input type="text" id="calendarId" placeholder="name@gmail.com" />
+            </div>
+            <div>
+              <label for="calendarMax">Anzahl Termine</label>
+              <select id="calendarMax">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+              </select>
+            </div>
+            <div>
+              <label for="calendarTimeRange">Zeitraum (Tage)</label>
+              <input type="number" id="calendarTimeRange" value="7" min="1" max="30" />
+            </div>
+          </div>
+          <button type="button" id="calendarLoad">Termine laden</button>
+          <div id="calendarStatus" class="muted">API-Key und Kalender-ID werden nur lokal gespeichert.</div>
+          <div id="calendarEvents" class="list"></div>
         </div>
-        <div>
-          <label for="calendarMaxResults">Max. Termine</label>
-          <select id="calendarMaxResults">
-            <option value="5" selected>5</option>
-            <option value="10">10</option>
-            <option value="15">15</option>
-          </select>
-        </div>
-      </div>
-      <button type="button" onclick="loadCalendarEvents()">Kalender aktualisieren</button>
-      <div id="calendarEvents" class="list"></div>
-    </section>
+      </article>
 
-  <label>Name des Gastes</label>
-  <input type="text" id="gastName" placeholder="Vorname oder Spitzname" />
-    <section id="weather-section">
-      <h2>🌤️ Wetter & Tagesverlauf</h2>
-      <div class="weather-controls">
-        <div>
-          <label for="weatherCity">Ort</label>
-          <input type="text" id="weatherCity" placeholder="z.B. Berlin" />
+      <article class="widget" data-widget="weather" data-id="weather" style="transform: translate(340px, 0px);">
+        <div class="widget-handle">
+          <span>Wetter</span>
+          <div class="widget-actions">
+            <button type="button" data-action="refresh">↻</button>
+          </div>
         </div>
-        <div>
-          <label for="weatherCountry">Land-Code</label>
-          <input type="text" id="weatherCountry" placeholder="DE" maxlength="2" />
+        <div class="widget-body">
+          <div class="grid-two">
+            <div>
+              <label for="weatherCity">Ort</label>
+              <input type="text" id="weatherCity" placeholder="Zürich" />
+            </div>
+            <div>
+              <label for="weatherCountry">Land-Code</label>
+              <input type="text" id="weatherCountry" placeholder="CH" maxlength="2" />
+            </div>
+          </div>
+          <button type="button" id="weatherLoad">Wetter abrufen</button>
+          <div id="weatherContent" class="list"></div>
         </div>
-      </div>
-      <button type="button" onclick="loadWeather()">Wetter abrufen</button>
-      <div id="weatherContent">
-        <div class="empty-state">Keine Daten geladen. Ort wählen und auf „Wetter abrufen“ klicken.</div>
-      </div>
-    </section>
+      </article>
 
-  <label>Geburtsdatum</label>
-  <input type="date" id="geburtstag" />
-    <section id="stocks-section">
-      <h2>📈 Börsenkurse</h2>
-      <p class="muted">Nutze eine Alpha-Vantage-API und trenne mehrere Kürzel mit Komma (z.B. AAPL,MSFT,GOOGL).</p>
-      <div class="stocks-controls">
-        <div>
-          <label for="stocksApiKey">Alpha Vantage API-Key</label>
-          <input type="text" id="stocksApiKey" placeholder="demo" />
+      <article class="widget" data-widget="crypto" data-id="crypto" style="transform: translate(0px, 280px);">
+        <div class="widget-handle">
+          <span>Krypto-Kurse</span>
+          <div class="widget-actions">
+            <button type="button" data-action="refresh">↻</button>
+          </div>
         </div>
-        <div>
-          <label for="stocksSymbols">Ticker</label>
-          <input type="text" id="stocksSymbols" placeholder="AAPL,MSFT" />
+        <div class="widget-body">
+          <div class="grid-two">
+            <div>
+              <label for="cryptoSymbols">Coins (Kommagetrennt)</label>
+              <input type="text" id="cryptoSymbols" placeholder="bitcoin,ethereum,cardano" />
+            </div>
+            <div>
+              <label for="cryptoCurrency">Vergleichswährung</label>
+              <select id="cryptoCurrency">
+                <option value="chf">CHF</option>
+                <option value="eur">EUR</option>
+                <option value="usd" selected>USD</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" id="cryptoLoad">Kurse laden</button>
+          <div id="cryptoContent" class="list"></div>
         </div>
-      </div>
-      <button type="button" onclick="loadStocks()">Kurse laden</button>
-      <div id="stocksContent" class="stocks-grid"></div>
-    </section>
+      </article>
 
-  <label>Fragen bearbeiten (eine pro Zeile)</label>
-  <textarea id="fragenText"></textarea>
-    <section id="tasks-section">
-      <h2>✅ Schnelle To-dos</h2>
-      <div>
-        <label for="todoInput">Neue Aufgabe</label>
-        <input type="text" id="todoInput" placeholder="E-Mail beantworten..." onkeydown="if(event.key==='Enter'){addTodo();}" />
-        <button type="button" onclick="addTodo()">Aufgabe hinzufügen</button>
-      </div>
-      <ul id="todoList" class="list" style="list-style: none; padding: 0; margin: 0;"></ul>
-    </section>
+      <article class="widget" data-widget="stocks" data-id="stocks" style="transform: translate(340px, 280px);">
+        <div class="widget-handle">
+          <span>Aktienkurse</span>
+          <div class="widget-actions">
+            <button type="button" data-action="refresh">↻</button>
+          </div>
+        </div>
+        <div class="widget-body">
+          <div class="grid-two">
+            <div>
+              <label for="stocksSymbols">Ticker (Kommagetrennt)</label>
+              <input type="text" id="stocksSymbols" placeholder="AAPL,MSFT,TSLA" />
+            </div>
+            <div>
+              <label for="stocksApiKey">Alpha Vantage API-Key</label>
+              <input type="text" id="stocksApiKey" placeholder="demo" />
+            </div>
+          </div>
+          <button type="button" id="stocksLoad">Kurse laden</button>
+          <div id="stocksContent" class="list"></div>
+        </div>
+      </article>
 
-  <select id="presetSelect" onchange="ladePreset()"><option value="">– Auswahl –</option></select>
-  <button onclick="speicherePreset()">Preset speichern</button>
-  <button onclick="generiereFragefelder()">Fragen übernehmen</button>
-  <button onclick="shuffleFragen()">Fragen mischen</button>
-  <button onclick="generiereNeueFragen()">Neue Fragen generieren (KI)</button>
-  <div id="fragenContainer"></div>
-  <button onclick="generiereProfil()">Auswertung starten</button>
-  <div id="profil"></div>
-    <section id="notes-section">
-      <h2>🗒️ Notizen</h2>
-      <textarea id="notes" class="notes" placeholder="Schnelle Gedanken, Ideen oder Links..." oninput="saveNotes()"></textarea>
-      <p class="muted">Notizen werden lokal im Browser gespeichert.</p>
-    </section>
+      <article class="widget" data-widget="custom" data-id="custom" style="transform: translate(680px, 0px); width: 340px;">
+        <div class="widget-handle">
+          <span>Eigene Webparts</span>
+          <div class="widget-actions">
+            <button type="button" id="addWebpart">＋</button>
+          </div>
+        </div>
+        <div class="widget-body">
+          <form class="custom-form" id="customForm">
+            <input type="text" id="customTitle" placeholder="Titel" required />
+            <input type="url" id="customUrl" placeholder="https://..." required />
+            <button type="submit">Webpart hinzufügen</button>
+          </form>
+          <div id="customParts" class="list"></div>
+        </div>
+      </article>
+    </div>
   </main>
 
-  <footer>
-    📌 Hinweis: API-Keys werden ausschließlich im Browser gespeichert. Keine sensiblen Daten hier hochladen.
-  </footer>
-
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <script>
-    const presets = JSON.parse(localStorage.getItem("presets") || '{}');
-    if (!presets["Gianluca"]) {
-      presets["Gianluca"] = [
-        "Wenn du einen Tag in einem Film leben müsstest – welcher wäre das und warum?",
-        "Wenn dich jemand fragt, woher du kommst – was antwortest du?",
-        "Was schiebst du immer wieder vor dir her, weil’s einfach mühsam ist?",
-        "Was war dein letzter innerer Applaus-Moment?",
-        "Supermarkt-Challenge: Welche drei Artikel würdest du kaufen, um die Kassiererin maximal zu verwirren?",
-        "Du darfst ein Abendessen mit drei Figuren haben – real oder fiktiv. Wen lädst du ein und warum?",
-        "Angenommen, du wirst verhaftet – wofür würde dich dein Umfeld am ehesten verdächtigen?",
-        "Wenn Geld absolut keine Rolle spielen würde – was würdest du beruflich machen, einfach nur aus Freude?",
-        "Was brauchst du, um dich rundum wohl und frisch zu fühlen – innen wie außen?",
-        "Wenn du einen neuen Feiertag erfinden könntest – was wäre das Thema und wie würde man feiern?"
-      ];
-    }
-
-    function aktualisierePresetDropdown() {
-      const select = document.getElementById("presetSelect");
-      select.innerHTML = '<option value="">– Auswahl –</option>';
-      Object.keys(presets).forEach(name => {
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        select.appendChild(option);
-      });
-    }
-
-    function ladePreset() {
-      const name = document.getElementById("presetSelect").value;
-      if (name && presets[name]) {
-        document.getElementById("fragenText").value = presets[name].join("\n");
-        generiereFragefelder();
-      }
     const STORAGE_KEYS = {
-      CALENDAR_API: "dashboard.calendarApiKey",
-      CALENDAR_ID: "dashboard.calendarId",
-      CALENDAR_MAX: "dashboard.calendarMax",
-      WEATHER_CITY: "dashboard.weatherCity",
-      WEATHER_COUNTRY: "dashboard.weatherCountry",
-      STOCKS_API: "dashboard.stocksApi",
-      STOCKS_SYMBOLS: "dashboard.stocksSymbols",
-      TODOS: "dashboard.todos",
-      NOTES: "dashboard.notes"
+      LOCALE: 'dashboard.locale',
+      TIMEZONE: 'dashboard.timezone',
+      CALENDAR_KEY: 'dashboard.calendarKey',
+      CALENDAR_ID: 'dashboard.calendarId',
+      CALENDAR_MAX: 'dashboard.calendarMax',
+      CALENDAR_RANGE: 'dashboard.calendarRange',
+      WEATHER_CITY: 'dashboard.weatherCity',
+      WEATHER_COUNTRY: 'dashboard.weatherCountry',
+      CRYPTO_SYMBOLS: 'dashboard.cryptoSymbols',
+      CRYPTO_CURRENCY: 'dashboard.cryptoCurrency',
+      STOCKS_SYMBOLS: 'dashboard.stocksSymbols',
+      STOCKS_KEY: 'dashboard.stocksKey',
+      CUSTOM_PARTS: 'dashboard.customParts',
+      WIDGET_STATE: 'dashboard.widgetState'
     };
 
-    document.addEventListener("DOMContentLoaded", () => {
-      restoreInputs();
-      renderTodos();
-      loadSavedNotes();
+    const localeSelect = document.getElementById('localeSelect');
+    const timezoneSelect = document.getElementById('timezoneSelect');
+    const customTimezone = document.getElementById('customTimezone');
+    const currentTimeEl = document.getElementById('currentTime');
+    const currentDateEl = document.getElementById('currentDate');
+
+    function restoreSelects() {
+      const savedLocale = localStorage.getItem(STORAGE_KEYS.LOCALE);
+      if (savedLocale) localeSelect.value = savedLocale;
+      const savedTimezone = localStorage.getItem(STORAGE_KEYS.TIMEZONE);
+      if (savedTimezone) {
+        if ([...timezoneSelect.options].some(o => o.value === savedTimezone)) {
+          timezoneSelect.value = savedTimezone;
+          customTimezone.value = '';
+        } else {
+          timezoneSelect.value = 'custom';
+          customTimezone.value = savedTimezone;
+        }
+      }
+    }
+
+    function getActiveTimezone() {
+      const custom = customTimezone.value.trim();
+      if (custom) return custom;
+      const selectValue = timezoneSelect.value;
+      if (selectValue === 'custom') {
+        const stored = localStorage.getItem(STORAGE_KEYS.TIMEZONE);
+        return stored || 'Europe/Zurich';
+      }
+      return selectValue;
+    }
+
+    function updateClocks() {
+      const locale = localeSelect.value;
+      const timeZone = getActiveTimezone();
+      try {
+        const now = new Date();
+        const timeFormatter = new Intl.DateTimeFormat(locale, {
+          hour: '2-digit', minute: '2-digit', second: '2-digit',
+          hour12: false, timeZone
+        });
+        const dateFormatter = new Intl.DateTimeFormat(locale, {
+          weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
+          timeZone
+        });
+        currentTimeEl.textContent = timeFormatter.format(now);
+        currentDateEl.textContent = dateFormatter.format(now);
+      } catch (error) {
+        currentDateEl.textContent = 'Ungültige Region oder Zeitzone';
+      }
+    }
+
+    restoreSelects();
+    updateClocks();
+    setInterval(updateClocks, 1000);
+
+    localeSelect.addEventListener('change', () => {
+      localStorage.setItem(STORAGE_KEYS.LOCALE, localeSelect.value);
+      updateClocks();
     });
 
-    function restoreInputs() {
-      const calendarApiKey = localStorage.getItem(STORAGE_KEYS.CALENDAR_API) || "";
-      const calendarId = localStorage.getItem(STORAGE_KEYS.CALENDAR_ID) || "";
-      const calendarMax = localStorage.getItem(STORAGE_KEYS.CALENDAR_MAX) || "5";
-      const weatherCity = localStorage.getItem(STORAGE_KEYS.WEATHER_CITY) || "";
-      const weatherCountry = localStorage.getItem(STORAGE_KEYS.WEATHER_COUNTRY) || "";
-      const stocksApi = localStorage.getItem(STORAGE_KEYS.STOCKS_API) || "";
-      const stocksSymbols = localStorage.getItem(STORAGE_KEYS.STOCKS_SYMBOLS) || "";
+    timezoneSelect.addEventListener('change', () => {
+      if (timezoneSelect.value !== 'custom') {
+        customTimezone.value = '';
+        localStorage.setItem(STORAGE_KEYS.TIMEZONE, timezoneSelect.value);
+      } else {
+        customTimezone.focus();
+      }
+      updateClocks();
+    });
 
-      document.getElementById("calendarApiKey").value = calendarApiKey;
-      document.getElementById("calendarId").value = calendarId;
-      document.getElementById("calendarMaxResults").value = calendarMax;
-      document.getElementById("weatherCity").value = weatherCity;
-      document.getElementById("weatherCountry").value = weatherCountry;
-      document.getElementById("stocksApiKey").value = stocksApi;
-      document.getElementById("stocksSymbols").value = stocksSymbols;
+    function persistCustomTimezone() {
+      if (customTimezone.value.trim()) {
+        localStorage.setItem(STORAGE_KEYS.TIMEZONE, customTimezone.value.trim());
+      }
+      updateClocks();
     }
 
-    function persistInput(id, key) {
-      const value = document.getElementById(id).value.trim();
-      localStorage.setItem(key, value);
-      return value;
-    }
+    customTimezone.addEventListener('change', persistCustomTimezone);
+    customTimezone.addEventListener('input', persistCustomTimezone);
 
-    function speicherePreset() {
-      const name = prompt("Name für Preset?");
-      if (!name) return;
-      const fragen = document.getElementById("fragenText").value.trim().split("\n");
-      presets[name] = fragen;
-      localStorage.setItem("presets", JSON.stringify(presets));
-      aktualisierePresetDropdown();
-      alert("Gespeichert als: " + name);
-    }
-
-    function generiereFragefelder() {
-      const fragen = document.getElementById("fragenText").value.trim().split("\n");
-      const container = document.getElementById("fragenContainer");
-      container.innerHTML = "";
-      fragen.forEach((frage, i) => {
-        const div = document.createElement("div");
-        div.className = "frage-container";
-        div.innerHTML = `<label>${frage}</label><textarea id="antwort${i}"></textarea>`;
-        container.appendChild(div);
+    function persistInput(el, key) {
+      el.addEventListener('change', () => {
+        localStorage.setItem(key, el.value.trim());
       });
+      const saved = localStorage.getItem(key);
+      if (saved) el.value = saved;
     }
 
-    async function generiereProfil() {
-      const fragen = document.getElementById("fragenText").value.trim().split("\n");
-      const antworten = fragen.map((_, i) => document.getElementById("antwort" + i)?.value || "");
-      const geburtstag = document.getElementById("geburtstag").value;
-      const gastName = document.getElementById("gastName").value;
-      const apiKey = document.getElementById("apiKey").value.trim();
-      if (!apiKey || !geburtstag || antworten.some(a => !a.trim()) || !gastName.trim()) {
-        alert("Bitte alles ausfüllen!");
-    [
-      ["calendarApiKey", STORAGE_KEYS.CALENDAR_API],
-      ["calendarId", STORAGE_KEYS.CALENDAR_ID],
-      ["calendarMaxResults", STORAGE_KEYS.CALENDAR_MAX],
-      ["weatherCity", STORAGE_KEYS.WEATHER_CITY],
-      ["weatherCountry", STORAGE_KEYS.WEATHER_COUNTRY],
-      ["stocksApiKey", STORAGE_KEYS.STOCKS_API],
-      ["stocksSymbols", STORAGE_KEYS.STOCKS_SYMBOLS]
-    ].forEach(([id, key]) => {
-      document.getElementById(id).addEventListener("change", () => persistInput(id, key));
-    });
+    persistInput(document.getElementById('calendarApiKey'), STORAGE_KEYS.CALENDAR_KEY);
+    persistInput(document.getElementById('calendarId'), STORAGE_KEYS.CALENDAR_ID);
+    persistInput(document.getElementById('calendarMax'), STORAGE_KEYS.CALENDAR_MAX);
+    persistInput(document.getElementById('calendarTimeRange'), STORAGE_KEYS.CALENDAR_RANGE);
 
-    async function loadCalendarEvents() {
-      const apiKey = persistInput("calendarApiKey", STORAGE_KEYS.CALENDAR_API);
-      const calendarId = persistInput("calendarId", STORAGE_KEYS.CALENDAR_ID);
-      const maxResults = persistInput("calendarMaxResults", STORAGE_KEYS.CALENDAR_MAX) || "5";
-      const container = document.getElementById("calendarEvents");
+    persistInput(document.getElementById('weatherCity'), STORAGE_KEYS.WEATHER_CITY);
+    persistInput(document.getElementById('weatherCountry'), STORAGE_KEYS.WEATHER_COUNTRY);
+
+    persistInput(document.getElementById('cryptoSymbols'), STORAGE_KEYS.CRYPTO_SYMBOLS);
+    persistInput(document.getElementById('cryptoCurrency'), STORAGE_KEYS.CRYPTO_CURRENCY);
+
+    persistInput(document.getElementById('stocksSymbols'), STORAGE_KEYS.STOCKS_SYMBOLS);
+    persistInput(document.getElementById('stocksApiKey'), STORAGE_KEYS.STOCKS_KEY);
+
+    async function loadCalendar() {
+      const apiKey = document.getElementById('calendarApiKey').value.trim();
+      const calendarId = document.getElementById('calendarId').value.trim();
+      const maxResults = Number(document.getElementById('calendarMax').value) || 10;
+      const rangeDays = Number(document.getElementById('calendarTimeRange').value) || 7;
+      const eventsContainer = document.getElementById('calendarEvents');
+      const status = document.getElementById('calendarStatus');
 
       if (!apiKey || !calendarId) {
-        container.innerHTML = `<div class="empty-state">Bitte API-Key und Kalender-ID eintragen.</div>`;
+        status.textContent = 'Bitte API-Key und Kalender-ID eintragen.';
+        status.className = 'error';
+        eventsContainer.innerHTML = '';
         return;
       }
-      const geburtsTag = new Date(geburtstag).toLocaleDateString("de-DE", { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      const prompt = `Name: ${gastName}\nGeburtstag: ${geburtstag} (${geburtsTag})\n` + fragen.map((f, i) => `${f} – ${antworten[i]}`).join("\n") + "\nBitte analysiere die Persönlichkeit auf lustige, kreative Weise (ca. 2500 Zeichen).";
-      document.getElementById("profil").innerText = "⏳ Bitte warten ...";
 
+      status.textContent = 'Lade Termine...';
+      status.className = 'muted';
+      eventsContainer.innerHTML = '';
+
+      const timeMin = new Date().toISOString();
+      const timeMax = new Date(Date.now() + rangeDays * 86400000).toISOString();
       const url = new URL(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`);
-      url.searchParams.set("key", apiKey);
-      url.searchParams.set("timeMin", new Date().toISOString());
-      url.searchParams.set("singleEvents", "true");
-      url.searchParams.set("orderBy", "startTime");
-      url.searchParams.set("maxResults", maxResults);
-
-      container.innerHTML = `<div class="empty-state">Lade Termine...</div>`;
+      url.searchParams.set('key', apiKey);
+      url.searchParams.set('timeMin', timeMin);
+      url.searchParams.set('timeMax', timeMax);
+      url.searchParams.set('singleEvents', 'true');
+      url.searchParams.set('orderBy', 'startTime');
+      url.searchParams.set('maxResults', maxResults.toString());
 
       try {
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4",
-            messages: [
-              { role: "system", content: "Du bist ein witziger, kreativer Persönlichkeitsanalytiker." },
-              { role: "user", content: prompt }
-            ],
-            max_tokens: 1500,
-            temperature: 0.9
-          })
-        });
-        const res = await fetch(url.toString());
+        const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        document.getElementById("profil").innerText = data.choices?.[0]?.message?.content || "Keine Antwort.";
-      } catch (e) {
-        document.getElementById("profil").innerText = "⚠️ Fehler bei der KI-Anfrage.";
-        const events = data.items || [];
-
-        if (!events.length) {
-          container.innerHTML = `<div class="empty-state">Keine anstehenden Termine gefunden.</div>`;
+        if (!data.items?.length) {
+          status.textContent = 'Keine Termine im gewählten Zeitraum gefunden.';
+          status.className = 'muted';
           return;
         }
-
-        container.innerHTML = events.map(event => {
+        status.textContent = `${data.items.length} Termine geladen.`;
+        status.className = 'success';
+        const locale = localeSelect.value;
+        const timeZone = getActiveTimezone();
+        eventsContainer.innerHTML = data.items.map(event => {
           const start = event.start?.dateTime || event.start?.date;
+          const end = event.end?.dateTime || event.end?.date;
           const startDate = start ? new Date(start) : null;
-          const formatted = startDate ? startDate.toLocaleString("de-DE", { dateStyle: "medium", timeStyle: event.start?.date ? undefined : "short" }) : "";
+          const endDate = end ? new Date(end) : null;
+          const dateFormatter = new Intl.DateTimeFormat(locale, {
+            weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+            timeZone
+          });
+          const duration = startDate && endDate ? `${dateFormatter.format(startDate)} – ${dateFormatter.format(endDate)}` : 'Keine Zeitangabe';
           return `
             <div class="list-item">
-              <strong>${event.summary || "(Kein Titel)"}</strong>
-              <span class="muted">${formatted}</span>
-              ${event.location ? `<span class="muted">📍 ${event.location}</span>` : ""}
+              <strong>${event.summary || 'Ohne Titel'}</strong>
+              <span class="muted">${duration}</span>
+              ${event.location ? `<span>${event.location}</span>` : ''}
             </div>
           `;
-        }).join("");
+        }).join('');
       } catch (error) {
-        container.innerHTML = `<div class="empty-state">Fehler beim Laden: ${error.message}</div>`;
+        status.textContent = `Fehler beim Abruf: ${error.message}`;
+        status.className = 'error';
       }
     }
 
-    async function generiereNeueFragen() {
-      const apiKey = document.getElementById("apiKey").value.trim();
-      if (!apiKey) return alert("API-Key fehlt.");
     async function loadWeather() {
-      const city = persistInput("weatherCity", STORAGE_KEYS.WEATHER_CITY);
-      const country = persistInput("weatherCountry", STORAGE_KEYS.WEATHER_COUNTRY);
-      const container = document.getElementById("weatherContent");
+      const city = document.getElementById('weatherCity').value.trim();
+      const country = document.getElementById('weatherCountry').value.trim();
+      const container = document.getElementById('weatherContent');
 
       if (!city) {
-        container.innerHTML = `<div class="empty-state">Bitte einen Ort eingeben.</div>`;
+        container.innerHTML = '<div class="error">Bitte einen Ort eingeben.</div>';
         return;
       }
 
-      container.innerHTML = `<div class="empty-state">Suche Standort...</div>`;
+      container.innerHTML = '<div class="muted">Suche Koordinaten...</div>';
 
       try {
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4",
-            messages: [{ role: "user", content: "Erstelle 10 lustige, originelle Podcast-Interviewfragen (eine pro Zeile)." }],
-            max_tokens: 500,
-            temperature: 0.95
-          })
-        });
-        const data = await res.json();
-        const fragen = data.choices?.[0]?.message?.content.trim();
-        if (fragen) {
-          document.getElementById("fragenText").value = fragen;
-          generiereFragefelder();
-        const geoUrl = new URL("https://geocoding-api.open-meteo.com/v1/search");
-        geoUrl.searchParams.set("name", city);
-        if (country) geoUrl.searchParams.set("country", country);
-        geoUrl.searchParams.set("count", "1");
-        const geoRes = await fetch(geoUrl.toString());
+        const geoUrl = new URL('https://geocoding-api.open-meteo.com/v1/search');
+        geoUrl.searchParams.set('name', city);
+        if (country) geoUrl.searchParams.set('country', country);
+        geoUrl.searchParams.set('count', '1');
+        const geoRes = await fetch(geoUrl);
         if (!geoRes.ok) throw new Error(`Geocoding HTTP ${geoRes.status}`);
-        const geo = await geoRes.json();
-        const location = geo.results?.[0];
+        const geoData = await geoRes.json();
+        const location = geoData.results?.[0];
         if (!location) {
-          container.innerHTML = `<div class="empty-state">Ort wurde nicht gefunden.</div>`;
+          container.innerHTML = '<div class="error">Ort wurde nicht gefunden.</div>';
           return;
         }
-      } catch (e) {
-        alert("Fehler beim Generieren.");
 
-        container.innerHTML = `<div class="empty-state">Lade Wetterdaten für ${location.name}...</div>`;
+        container.innerHTML = '<div class="muted">Lade Wetterdaten...</div>';
 
-        const weatherUrl = new URL("https://api.open-meteo.com/v1/forecast");
-        weatherUrl.searchParams.set("latitude", location.latitude);
-        weatherUrl.searchParams.set("longitude", location.longitude);
-        weatherUrl.searchParams.set("current_weather", "true");
-        weatherUrl.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,weathercode");
-        weatherUrl.searchParams.set("hourly", "temperature_2m,precipitation");
-        weatherUrl.searchParams.set("timezone", "auto");
+        const weatherUrl = new URL('https://api.open-meteo.com/v1/forecast');
+        weatherUrl.searchParams.set('latitude', location.latitude);
+        weatherUrl.searchParams.set('longitude', location.longitude);
+        weatherUrl.searchParams.set('current_weather', 'true');
+        weatherUrl.searchParams.set('hourly', 'temperature_2m');
+        weatherUrl.searchParams.set('daily', 'temperature_2m_max,temperature_2m_min,weathercode');
+        weatherUrl.searchParams.set('timezone', 'auto');
 
-        const weatherRes = await fetch(weatherUrl.toString());
+        const weatherRes = await fetch(weatherUrl);
         if (!weatherRes.ok) throw new Error(`Weather HTTP ${weatherRes.status}`);
-        const weather = await weatherRes.json();
+        const data = await weatherRes.json();
+        const locale = localeSelect.value;
 
-        const current = weather.current_weather;
-        const daily = weather.daily;
-
-        const weatherCodeMap = {
-          0: "Klarer Himmel",
-          1: "Überwiegend klar",
-          2: "Teils bewölkt",
-          3: "Bewölkt",
-          45: "Nebel",
-          48: "Reifnebel",
-          51: "Leichter Niesel",
-          53: "Mäßiger Niesel",
-          55: "Starker Niesel",
-          61: "Leichter Regen",
-          63: "Regen",
-          65: "Starker Regen",
-          71: "Leichter Schneefall",
-          73: "Schneefall",
-          75: "Starker Schneefall",
-          95: "Gewitter",
-          96: "Gewitter + Hagel",
-          99: "Heftiges Gewitter"
+        const codeMap = {
+          0: 'Klarer Himmel', 1: 'Überwiegend klar', 2: 'Teilweise bewölkt', 3: 'Bewölkt',
+          45: 'Nebel', 48: 'Reifnebel', 51: 'Leichter Nieselregen', 53: 'Mäßiger Nieselregen',
+          55: 'Starker Nieselregen', 61: 'Leichter Regen', 63: 'Regen', 65: 'Starker Regen',
+          71: 'Leichter Schneefall', 73: 'Schneefall', 75: 'Starker Schneefall',
+          95: 'Gewitter', 96: 'Gewitter mit Hagel', 99: 'Heftiges Gewitter'
         };
 
-        const forecast = daily.time?.slice(0, 3).map((day, index) => {
-          const date = new Date(day).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "2-digit" });
+        const current = data.current_weather;
+        const daily = data.daily;
+
+        const dailyCards = daily.time.slice(0, 4).map((day, index) => {
+          const date = new Date(day);
+          const formatted = new Intl.DateTimeFormat(locale, { weekday: 'long', day: '2-digit', month: '2-digit' }).format(date);
           const max = Math.round(daily.temperature_2m_max[index]);
           const min = Math.round(daily.temperature_2m_min[index]);
-          const code = weatherCodeMap[daily.weathercode[index]] || "";
+          const code = codeMap[daily.weathercode[index]] || '';
           return `
             <div class="list-item">
-              <strong>${date}</strong>
+              <strong>${formatted}</strong>
+              <span>${min}° / ${max}°</span>
               <span class="muted">${code}</span>
-              <span>${min}°C – ${max}°C</span>
             </div>
           `;
-        }).join("");
+        }).join('');
 
         container.innerHTML = `
-          <div class="list">
-            <div class="list-item">
-              <strong>Jetzt in ${location.name}</strong>
-              <span class="muted">${weatherCodeMap[current.weathercode] || ""}</span>
-              <span style="font-size: 2rem; font-weight: 700;">${Math.round(current.temperature)}°C</span>
-              <span class="muted">Wind: ${Math.round(current.windspeed)} km/h</span>
+          <div class="list-item">
+            <strong>Jetzt in ${location.name}</strong>
+            <div class="info-line">
+              <span class="muted">${codeMap[current.weathercode] || ''}</span>
+              <span style="font-size:2rem;font-weight:700;">${Math.round(current.temperature)}°C</span>
             </div>
-            <div class="muted">Vorhersage (nächste 3 Tage)</div>
-            ${forecast}
+            <span class="muted">Wind: ${Math.round(current.windspeed)} km/h</span>
           </div>
+          <div class="muted">Vorhersage (nächste 4 Tage)</div>
+          ${dailyCards}
         `;
       } catch (error) {
-        container.innerHTML = `<div class="empty-state">Fehler: ${error.message}</div>`;
+        container.innerHTML = `<div class="error">Fehler: ${error.message}</div>`;
       }
     }
 
-    function shuffleFragen() {
-      const fragen = document.getElementById("fragenText").value.trim().split("\n");
-      for (let i = fragen.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [fragen[i], fragen[j]] = [fragen[j], fragen[i]];
-    async function loadStocks() {
-      const apiKey = persistInput("stocksApiKey", STORAGE_KEYS.STOCKS_API);
-      const symbolsInput = persistInput("stocksSymbols", STORAGE_KEYS.STOCKS_SYMBOLS);
-      const container = document.getElementById("stocksContent");
-
-      if (!apiKey || !symbolsInput) {
-        container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">API-Key und mindestens ein Ticker erforderlich.</div>`;
+    async function loadCrypto() {
+      const symbolsInput = document.getElementById('cryptoSymbols').value.trim();
+      const vsCurrency = document.getElementById('cryptoCurrency').value;
+      const container = document.getElementById('cryptoContent');
+      if (!symbolsInput) {
+        container.innerHTML = '<div class="error">Bitte mindestens einen Coin eingeben.</div>';
         return;
       }
-
-      const symbols = symbolsInput.split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
-      if (!symbols.length) {
-        container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">Bitte gültige Ticker eintragen.</div>`;
-        return;
-      }
-
-      container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">Lade Kurse...</div>`;
-
+      const ids = symbolsInput.split(',').map(s => s.trim().toLowerCase()).filter(Boolean).join(',');
+      const url = new URL('https://api.coingecko.com/api/v3/simple/price');
+      url.searchParams.set('ids', ids);
+      url.searchParams.set('vs_currencies', vsCurrency);
+      url.searchParams.set('include_24hr_change', 'true');
+      container.innerHTML = '<div class="muted">Lade Kurse...</div>';
       try {
-        const results = await Promise.all(symbols.map(async symbol => {
-          const url = new URL("https://www.alphavantage.co/query");
-          url.searchParams.set("function", "GLOBAL_QUOTE");
-          url.searchParams.set("symbol", symbol);
-          url.searchParams.set("apikey", apiKey);
-          const res = await fetch(url.toString());
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-          return data["Global Quote"]; 
-        }));
-
-        container.innerHTML = results.map((quote, index) => {
-          if (!quote || Object.keys(quote).length === 0) {
-            return `<div class="list-item" style="grid-column: span 1;">
-              <strong>${symbols[index]}</strong>
-              <span class="muted">Keine Daten gefunden (Rate-Limit?)</span>
-            </div>`;
-          }
-
-          const price = Number(quote["05. price"]).toFixed(2);
-          const change = Number(quote["09. change"]).toFixed(2);
-          const changePercent = quote["10. change percent"];
-          const positive = parseFloat(change) >= 0;
-
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const entries = Object.entries(data);
+        if (!entries.length) {
+          container.innerHTML = '<div class="error">Keine Daten gefunden.</div>';
+          return;
+        }
+        container.innerHTML = entries.map(([id, values]) => {
+          const price = values[vsCurrency];
+          const change = values[`${vsCurrency}_24h_change`];
+          const changeRounded = change?.toFixed(2);
+          const changeClass = change > 0 ? 'success' : change < 0 ? 'error' : 'muted';
           return `
-            <div class="list-item" style="grid-column: span 1;">
-              <strong>${quote["01. symbol"] || symbols[index]}</strong>
-              <span style="font-size: 1.35rem; font-weight: 700;">$${price}</span>
-              <span style="color: ${positive ? '#34d399' : '#f87171'}; font-weight: 600;">
-                ${positive ? '▲' : '▼'} ${Math.abs(change)} (${changePercent})
-              </span>
-              <span class="muted">Letztes Update: ${quote["07. latest trading day"] || "n/a"}</span>
+            <div class="list-item">
+              <strong>${id}</strong>
+              <span>${price ? price.toLocaleString(undefined, { style: 'currency', currency: vsCurrency.toUpperCase() }) : '–'}</span>
+              ${changeRounded ? `<span class="${changeClass}">${changeRounded}% in 24h</span>` : ''}
             </div>
           `;
-        }).join("");
+        }).join('');
       } catch (error) {
-        container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">Fehler: ${error.message}</div>`;
-      }
-      document.getElementById("fragenText").value = fragen.join("\n");
-      generiereFragefelder();
-    }
-
-    function checkAPIStatus() {
-      const key = document.getElementById("apiKey").value.trim();
-      const box = document.getElementById("statusBox");
-      if (!key) {
-        box.innerText = "❌ Kein API Key eingetragen";
-    function addTodo() {
-      const input = document.getElementById("todoInput");
-      const text = input.value.trim();
-      if (!text) return;
-      const todos = getTodos();
-      todos.push({ text, done: false, id: Date.now() });
-      localStorage.setItem(STORAGE_KEYS.TODOS, JSON.stringify(todos));
-      input.value = "";
-      renderTodos();
-    }
-
-    function toggleTodo(id) {
-      const todos = getTodos().map(todo => todo.id === id ? { ...todo, done: !todo.done } : todo);
-      localStorage.setItem(STORAGE_KEYS.TODOS, JSON.stringify(todos));
-      renderTodos();
-    }
-
-    function deleteTodo(id) {
-      const todos = getTodos().filter(todo => todo.id !== id);
-      localStorage.setItem(STORAGE_KEYS.TODOS, JSON.stringify(todos));
-      renderTodos();
-    }
-
-    function getTodos() {
-      try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEYS.TODOS)) || [];
-      } catch (_) {
-        return [];
+        container.innerHTML = `<div class="error">Fehler: ${error.message}</div>`;
       }
     }
 
-    function renderTodos() {
-      const list = document.getElementById("todoList");
-      const todos = getTodos();
-      if (!todos.length) {
-        list.innerHTML = `<div class="empty-state">Keine Aufgaben – alles erledigt! 🎉</div>`;
+    async function loadStocks() {
+      const symbolsInput = document.getElementById('stocksSymbols').value.trim();
+      const apiKey = document.getElementById('stocksApiKey').value.trim() || 'demo';
+      const container = document.getElementById('stocksContent');
+      if (!symbolsInput) {
+        container.innerHTML = '<div class="error">Bitte mindestens einen Ticker eingeben.</div>';
         return;
       }
-      fetch("https://api.openai.com/v1/models", {
-        headers: { "Authorization": `Bearer ${key}` }
-      })
-      .then(res => {
-        if (res.ok) {
-          box.innerText = "✅ API-Verbindung aktiv";
-        } else {
-          box.innerText = "⚠️ API-Key ungültig oder Verbindung gestört";
-        }
-      })
-      .catch(() => {
-        box.innerText = "⚠️ Verbindung fehlgeschlagen";
-      });
-      list.innerHTML = todos.map(todo => `
-        <li class="list-item" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <input type="checkbox" ${todo.done ? "checked" : ""} onchange="toggleTodo(${todo.id})" style="width: auto;" />
-            <span style="text-decoration: ${todo.done ? 'line-through' : 'none'}; color: ${todo.done ? 'var(--text-muted)' : 'inherit'};">${todo.text}</span>
-          </div>
-          <button type="button" onclick="deleteTodo(${todo.id})" style="width: auto; padding: 0.35rem 0.75rem; background: rgba(248, 113, 113, 0.25); border: 1px solid rgba(248, 113, 113, 0.4);">Löschen</button>
-        </li>
-      `).join("");
-    }
-
-    function saveNotes() {
-      const notes = document.getElementById("notes").value;
-      localStorage.setItem(STORAGE_KEYS.NOTES, notes);
-    }
-
-    aktualisierePresetDropdown();
-    generiereFragefelder();
-    checkAPIStatus();
-    document.getElementById("apiKey").addEventListener("change", checkAPIStatus);
-    function loadSavedNotes() {
-      const notes = localStorage.getItem(STORAGE_KEYS.NOTES);
-      if (notes) {
-        document.getElementById("notes").value = notes;
+      const symbols = symbolsInput.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+      container.innerHTML = '<div class="muted">Lade Kurse...</div>';
+      try {
+        const results = await Promise.all(symbols.map(async symbol => {
+          const url = new URL('https://www.alphavantage.co/query');
+          url.searchParams.set('function', 'GLOBAL_QUOTE');
+          url.searchParams.set('symbol', symbol);
+          url.searchParams.set('apikey', apiKey);
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const quote = data['Global Quote'];
+          if (!quote) return { symbol, error: data.Note || 'Keine Daten (API-Limit?)' };
+          return {
+            symbol,
+            price: Number(quote['05. price']),
+            change: Number(quote['09. change']),
+            changePercent: Number(quote['10. change percent'])
+          };
+        }));
+        container.innerHTML = results.map(item => {
+          if (item.error) {
+            return `<div class="list-item"><strong>${item.symbol}</strong><span class="error">${item.error}</span></div>`;
+          }
+          const changeClass = item.change > 0 ? 'success' : item.change < 0 ? 'error' : 'muted';
+          return `
+            <div class="list-item">
+              <strong>${item.symbol}</strong>
+              <span>${item.price ? item.price.toFixed(2) : '–'} USD</span>
+              <span class="${changeClass}">${item.change?.toFixed(2) ?? '0.00'} (${item.changePercent?.toFixed(2) ?? '0.00'}%)</span>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        container.innerHTML = `<div class="error">Fehler: ${error.message}</div>`;
       }
+    }
+
+    document.getElementById('calendarLoad').addEventListener('click', loadCalendar);
+    document.getElementById('weatherLoad').addEventListener('click', loadWeather);
+    document.getElementById('cryptoLoad').addEventListener('click', loadCrypto);
+    document.getElementById('stocksLoad').addEventListener('click', loadStocks);
+
+    document.querySelectorAll('.widget-actions [data-action="refresh"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const widget = btn.closest('.widget');
+        switch (widget.dataset.widget) {
+          case 'calendar':
+            loadCalendar();
+            break;
+          case 'weather':
+            loadWeather();
+            break;
+          case 'crypto':
+            loadCrypto();
+            break;
+          case 'stocks':
+            loadStocks();
+            break;
+          default:
+            break;
+        }
+      });
+    });
+
+    const customForm = document.getElementById('customForm');
+    const customPartsContainer = document.getElementById('customParts');
+
+    function renderCustomParts() {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_PARTS) || '[]');
+      customPartsContainer.innerHTML = saved.map((part, index) => `
+        <div class="list-item">
+          <div class="info-line"><strong>${part.title}</strong><button type="button" data-index="${index}" class="remove-custom">Entfernen</button></div>
+          <iframe class="webpart-frame" src="${part.url}" loading="lazy" title="${part.title}"></iframe>
+        </div>
+      `).join('');
+      customPartsContainer.querySelectorAll('.remove-custom').forEach(button => {
+        button.addEventListener('click', () => {
+          const idx = Number(button.dataset.index);
+          const parts = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_PARTS) || '[]');
+          parts.splice(idx, 1);
+          localStorage.setItem(STORAGE_KEYS.CUSTOM_PARTS, JSON.stringify(parts));
+          renderCustomParts();
+        });
+      });
+    }
+
+    document.getElementById('addWebpart').addEventListener('click', () => {
+      document.getElementById('customTitle').focus();
+    });
+
+    customForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const title = document.getElementById('customTitle').value.trim();
+      const url = document.getElementById('customUrl').value.trim();
+      if (!title || !url) return;
+      const parts = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_PARTS) || '[]');
+      parts.push({ title, url });
+      localStorage.setItem(STORAGE_KEYS.CUSTOM_PARTS, JSON.stringify(parts));
+      customForm.reset();
+      renderCustomParts();
+    });
+
+    renderCustomParts();
+
+    function restoreWidgetState() {
+      const state = JSON.parse(localStorage.getItem(STORAGE_KEYS.WIDGET_STATE) || '{}');
+      document.querySelectorAll('.widget').forEach(widget => {
+        const id = widget.dataset.id;
+        const saved = state[id];
+        if (saved) {
+          widget.style.transform = `translate(${saved.x}px, ${saved.y}px)`;
+          widget.style.width = saved.width;
+          widget.style.height = saved.height;
+          widget.dataset.x = saved.x;
+          widget.dataset.y = saved.y;
+        } else {
+          widget.dataset.x = 0;
+          widget.dataset.y = 0;
+        }
+      });
+    }
+
+    function persistWidgetState() {
+      const state = {};
+      document.querySelectorAll('.widget').forEach(widget => {
+        const id = widget.dataset.id;
+        state[id] = {
+          x: Number(widget.dataset.x) || 0,
+          y: Number(widget.dataset.y) || 0,
+          width: widget.style.width || '320px',
+          height: widget.style.height || 'auto'
+        };
+      });
+      localStorage.setItem(STORAGE_KEYS.WIDGET_STATE, JSON.stringify(state));
+    }
+
+    interact('.widget').draggable({
+      allowFrom: '.widget-handle',
+      listeners: {
+        move (event) {
+          const target = event.target;
+          const x = (parseFloat(target.dataset.x) || 0) + event.dx;
+          const y = (parseFloat(target.dataset.y) || 0) + event.dy;
+          target.style.transform = `translate(${x}px, ${y}px)`;
+          target.dataset.x = x;
+          target.dataset.y = y;
+        },
+        end: persistWidgetState
+      }
+    }).resizable({
+      edges: { left: true, right: true, bottom: true, top: true },
+      listeners: {
+        move (event) {
+          let { x, y } = event.target.dataset;
+          x = parseFloat(x) || 0;
+          y = parseFloat(y) || 0;
+
+          x += event.deltaRect.left;
+          y += event.deltaRect.top;
+
+          event.target.style.width = event.rect.width + 'px';
+          event.target.style.height = event.rect.height + 'px';
+          event.target.style.transform = `translate(${x}px, ${y}px)`;
+
+          event.target.dataset.x = x;
+          event.target.dataset.y = y;
+        },
+        end: persistWidgetState
+      },
+      modifiers: [
+        interact.modifiers.restrictSize({ min: { width: 220, height: 150 } })
+      ]
+    });
+
+    restoreWidgetState();
+
+    // Initial data load if credentials are already stored
+    if (document.getElementById('calendarApiKey').value && document.getElementById('calendarId').value) {
+      loadCalendar();
+    }
+    if (document.getElementById('weatherCity').value) {
+      loadWeather();
+    }
+    if (document.getElementById('cryptoSymbols').value) {
+      loadCrypto();
+    }
+    if (document.getElementById('stocksSymbols').value) {
+      loadStocks();
     }
   </script>
 </body>
